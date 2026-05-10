@@ -107,19 +107,31 @@
 
       }
 
-      const adminRef = doc(db, "admins", user.uid);
+      const userRef = doc(db, "users", user.uid);
 
-      const adminSnap = await getDoc(adminRef);
+const userSnap = await getDoc(userRef);
 
-      if (!adminSnap.exists()) {
+if (!userSnap.exists()) {
 
-        alert("You are not admin.");
+  alert("User document not found.");
 
-        await signOut(auth);
+  await signOut(auth);
 
-        return;
+  return;
 
-      }
+}
+
+const userData = userSnap.data();
+
+if (!userData.isAdmin) {
+
+  alert("You are not admin.");
+
+  await signOut(auth);
+
+  return;
+
+}
 
       currentUser = user;
 
