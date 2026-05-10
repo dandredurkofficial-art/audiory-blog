@@ -1,0 +1,34 @@
+media:
+  input: images/uploads
+  output: /images/uploads
+
+content:
+  - name: posts
+    label: Posts
+    type: collection
+    path: content/posts
+
+    filename: "{primary}.md"
+
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+
+      - name: date
+        label: Publish Date
+        type: date
+        required: true
+
+      - name: excerpt
+        label: Excerpt
+        type: text
+
+      - name: thumbnail
+        label: Featured Image
+        type: image
+
+      - name: body
+        label: Body
+        type: rich-text
