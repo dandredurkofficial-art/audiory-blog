@@ -16,7 +16,12 @@
       addDoc,
       serverTimestamp,
       doc,
-      getDoc
+      getDoc,
+      getDocs,
+      orderBy,
+      query,
+      deleteDoc,
+      updateDoc
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     import {
@@ -34,22 +39,26 @@
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 
-    // =========================
     // FIREBASE CONFIG
-    // =========================
 
     const firebaseConfig = {
+
       apiKey: "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
+
       authDomain: "audiory-beat-store.firebaseapp.com",
+
       projectId: "audiory-beat-store",
+
       storageBucket: "audiory-beat-store.firebasestorage.app",
+
       messagingSenderId: "688272560511",
+
       appId: "1:688272560511:web:9031e6ce215d6f08764a4a"
+
     };
 
-    // =========================
+
     // INIT
-    // =========================
 
     const app = initializeApp(firebaseConfig);
 
@@ -61,10 +70,10 @@
 
     let currentUser = null;
 
+    let editingPostId = null;
 
-    // =========================
+
     // LOGIN
-    // =========================
 
     async function login() {
 
@@ -91,9 +100,7 @@
     window.login = login;
 
 
-    // =========================
     // AUTH CHECK
-    // =========================
 
     onAuthStateChanged(auth, async (user) => {
 
@@ -101,7 +108,7 @@
 
         document.getElementById("loginBox").style.display = "flex";
 
-        document.getElementById("editor").style.display = "none";
+        document.getElementById("dashboard").style.display = "none";
 
         return;
 
@@ -137,22 +144,151 @@
 
       document.getElementById("loginBox").style.display = "none";
 
-      document.getElementById("editor").style.display = "block";
+      document.getElementById("dashboard").style.display = "block";
+
+      loadPosts();
 
     });
 
 
-    // =========================
-    // PUBLISH POST
-    // =========================
+    // LOAD POSTS
+
+    async function loadPosts() {
+
+      const postsContainer =
+        document.getElementById("postsContainer");
+
+      postsContainer.innerHTML = "Loading posts...";
+
+      const q = query(
+        collection(db, "blogPosts"),
+        orderBy("createdAt", "desc")
+      );
+
+      const snapshot = await getDocs(q);
+
+      postsContainer.innerHTML = "";
+
+      snapshot.forEach((docSnap) => {
+
+        const post = docSnap.data();
+
+        const div = document.createElement("div");
+
+        div.className = "postCard";
+
+        div.innerHTML = `
+
+          <img
+            src="${post.thumbnailURL || ''}"
+            class="postThumb"
+          />
+
+          <div class="postInfo">
+
+            <h3>${post.title}</h3>
+
+            <p>${post.excerpt || ''}</p>
+
+            <small>
+              By ${post.authorName || 'Unknown'}
+            </small>
+
+            <br/>
+
+            <small>
+              ${post.createdAt?.toDate
+                ? post.createdAt.toDate().toLocaleString()
+                : ''}
+            </small>
+
+            <div class="postButtons">
+
+              <button onclick="editPost('${docSnap.id}')">
+                Edit
+              </button>
+
+              <button
+                class="deleteBtn"
+                onclick="deletePost('${docSnap.id}')"
+              >
+                Delete
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+        postsContainer.appendChild(div);
+
+      });
+
+    }
+
+    window.loadPosts = loadPosts;
+
+
+    // DELETE POST
+
+    async function deletePost(id) {
+
+      const confirmDelete =
+        confirm("Delete this post?");
+
+      if (!confirmDelete) return;
+
+      await deleteDoc(doc(db, "blogPosts", id));
+
+      loadPosts();
+
+    }
+
+    window.deletePost = deletePost;
+
+
+    // EDIT POST
+
+    async function editPost(id) {
+
+      editingPostId = id;
+
+      const snap = await getDoc(doc(db, "blogPosts", id));
+
+      const data = snap.data();
+
+      document.getElementById("title").value =
+        data.title || "";
+
+      document.getElementById("excerpt").value =
+        data.excerpt || "";
+
+      document.getElementById("content").value =
+        data.content || "";
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+    }
+
+    window.editPost = editPost;
+
+
+    // PUBLISH OR UPDATE
 
     async function publishPost() {
 
-      const title = document.getElementById("title").value;
+      const title =
+        document.getElementById("title").value;
 
-      const excerpt = document.getElementById("excerpt").value;
+      const excerpt =
+        document.getElementById("excerpt").value;
 
-      const content = document.getElementById("content").value;
+      const content =
+        document.getElementById("content").value;
 
       const thumbnailFile =
         document.getElementById("thumbnail").files[0];
@@ -160,12 +296,11 @@
 
       if (!title || !content) {
 
-        alert("Please fill all required fields.");
+        alert("Fill all required fields.");
 
         return;
 
       }
-
 
       const slug = title
         .toLowerCase()
@@ -175,9 +310,7 @@
       let thumbnailURL = "";
 
 
-      // =========================
-      // UPLOAD IMAGE
-      // =========================
+      // IMAGE UPLOAD
 
       if (thumbnailFile) {
 
@@ -188,40 +321,65 @@
 
         await uploadBytes(imageRef, thumbnailFile);
 
-        thumbnailURL = await getDownloadURL(imageRef);
+        thumbnailURL =
+          await getDownloadURL(imageRef);
 
       }
 
 
-      // =========================
-      // SAVE POST
-      // =========================
+      // UPDATE EXISTING
 
-      await addDoc(collection(db, "blogPosts"), {
+      if (editingPostId) {
 
-        title,
+        const updateData = {
 
-        excerpt,
+          title,
+          excerpt,
+          content,
+          slug
 
-        content,
+        };
 
-        slug,
+        if (thumbnailURL) {
 
-        thumbnailURL,
+          updateData.thumbnailURL = thumbnailURL;
 
-        authorName: currentUser.email,
+        }
 
-        authorId: currentUser.uid,
+        await updateDoc(
+          doc(db, "blogPosts", editingPostId),
+          updateData
+        );
 
-        createdAt: serverTimestamp(),
+        alert("Post updated!");
 
-        published: true
+        editingPostId = null;
 
-      });
+      } else {
 
+        // CREATE NEW
 
-      alert("Blog post published successfully!");
+        await addDoc(collection(db, "blogPosts"), {
 
+          title,
+          excerpt,
+          content,
+          slug,
+          thumbnailURL,
+
+          authorName: currentUser.email,
+
+          authorId: currentUser.uid,
+
+          createdAt: serverTimestamp(),
+
+          published: true
+
+        });
+
+        alert("Post published!");
+
+      }
 
 
       // CLEAR FORM
@@ -233,6 +391,8 @@
       document.getElementById("content").value = "";
 
       document.getElementById("thumbnail").value = "";
+
+      loadPosts();
 
     }
 
@@ -257,15 +417,61 @@
 
       font-family:Arial;
 
+    }
+
+    .container{
+
+      max-width:1200px;
+
+      margin:auto;
+
       padding:20px;
+
+    }
+
+    .topBar{
+
+      display:flex;
+
+      justify-content:space-between;
+
+      align-items:center;
+
+      margin-bottom:30px;
+
+      padding-bottom:20px;
+
+      border-bottom:1px solid #1f2937;
 
     }
 
     h1{
 
-      margin-bottom:20px;
+      margin:0;
 
       font-size:32px;
+
+    }
+
+    .grid{
+
+      display:grid;
+
+      grid-template-columns:1fr 1fr;
+
+      gap:20px;
+
+    }
+
+    .panel{
+
+      background:#0f172a;
+
+      border:1px solid #1e293b;
+
+      border-radius:20px;
+
+      padding:20px;
 
     }
 
@@ -280,19 +486,19 @@
 
       border:none;
 
-      border-radius:14px;
+      border-radius:12px;
 
       background:#111827;
 
       color:white;
 
-      font-size:16px;
+      font-size:15px;
 
     }
 
     textarea{
 
-      min-height:300px;
+      min-height:250px;
 
       resize:vertical;
 
@@ -306,15 +512,67 @@
 
       border:none;
 
-      padding:14px 20px;
+      padding:12px 18px;
 
-      border-radius:14px;
+      border-radius:12px;
 
       font-weight:bold;
 
       cursor:pointer;
 
-      font-size:16px;
+    }
+
+    .deleteBtn{
+
+      background:#ef4444;
+
+      color:white;
+
+    }
+
+    .postCard{
+
+      display:flex;
+
+      gap:15px;
+
+      background:#111827;
+
+      border-radius:16px;
+
+      padding:15px;
+
+      margin-bottom:15px;
+
+    }
+
+    .postThumb{
+
+      width:120px;
+
+      height:120px;
+
+      object-fit:cover;
+
+      border-radius:12px;
+
+      background:#1f2937;
+
+    }
+
+    .postInfo{
+
+      flex:1;
+
+    }
+
+    .postButtons{
+
+      display:flex;
+
+      gap:10px;
+
+      margin-top:15px;
 
     }
 
@@ -330,25 +588,37 @@
 
       gap:12px;
 
+      padding:20px;
+
     }
 
-    #editor{
+    #dashboard{
 
       display:none;
 
-      max-width:900px;
-
-      margin:auto;
-
     }
 
-    .uploadLabel{
+    @media(max-width:900px){
 
-      margin-bottom:8px;
+      .grid{
 
-      display:block;
+        grid-template-columns:1fr;
 
-      color:#9ca3af;
+      }
+
+      .postCard{
+
+        flex-direction:column;
+
+      }
+
+      .postThumb{
+
+        width:100%;
+
+        height:220px;
+
+      }
 
     }
 
@@ -384,45 +654,74 @@
 
 
 
-  <!-- EDITOR -->
+  <!-- DASHBOARD -->
 
-  <div id="editor">
+  <div id="dashboard">
 
-    <h1>Publish Blog Post</h1>
+    <div class="container">
 
+      <div class="topBar">
 
-    <input
-      id="title"
-      placeholder="Post title"
-    />
+        <h1>Audiory Blog Dashboard</h1>
 
+        <button onclick="location.reload()">
+          Refresh
+        </button>
 
-    <input
-      id="excerpt"
-      placeholder="Short excerpt"
-    />
+      </div>
 
 
-    <label class="uploadLabel">
-      Featured Thumbnail
-    </label>
+      <div class="grid">
 
-    <input
-      type="file"
-      id="thumbnail"
-      accept="image/*"
-    />
+        <!-- CREATE -->
+
+        <div class="panel">
+
+          <h2>Create / Edit Post</h2>
+
+          <input
+            id="title"
+            placeholder="Post title"
+          />
+
+          <input
+            id="excerpt"
+            placeholder="Short excerpt"
+          />
+
+          <input
+            type="file"
+            id="thumbnail"
+            accept="image/*"
+          />
+
+          <textarea
+            id="content"
+            placeholder="Write your article..."
+          ></textarea>
+
+          <button onclick="publishPost()">
+            Publish Post
+          </button>
+
+        </div>
 
 
-    <textarea
-      id="content"
-      placeholder="Write your article..."
-    ></textarea>
+        <!-- POSTS -->
 
+        <div class="panel">
 
-    <button onclick="publishPost()">
-      Publish Post
-    </button>
+          <h2>Published Posts</h2>
+
+          <div id="postsContainer">
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
 
   </div>
 
