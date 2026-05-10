@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Blog Post</title>
+
+  <script type="module">
+
+    import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+
+      apiKey: "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
+
+      authDomain: "audiory-beat-store.firebaseapp.com",
+
+      projectId: "audiory-beat-store",
+
+      storageBucket: "audiory-beat-store.firebasestorage.app",
+
+      messagingSenderId: "688272560511",
+
+      appId: "1:688272560511:web:9031e6ce215d6f08764a4a"
+
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+
+
+    async function loadPost() {
+
+      const params =
+        new URLSearchParams(window.location.search);
+
+      const slug = params.get("slug");
+
+      const q = query(
+        collection(db, "blogPosts"),
+        where("slug", "==", slug)
+      );
+
+      const snapshot = await getDocs(q);
+
+      snapshot.forEach((docSnap) => {
+
+        const post = docSnap.data();
+
+        document.title = post.title;
+
+        document.getElementById("title").innerText =
+          post.title;
+
+        document.getElementById("image").src =
+          post.thumbnailURL || '';
+
+        document.getElementById("content").innerHTML =
+          post.content;
+
+        document.getElementById("meta").innerText =
+          `By ${post.authorName}`;
+
+      });
+
+    }
+
+    loadPost();
+
+  </script>
+
+  <style>
+
+    body{
+
+      margin:0;
+
+      background:#050816;
+
+      color:white;
+
+      font-family:Arial;
+
+    }
+
+    .container{
+
+      max-width:900px;
+
+      margin:auto;
+
+      padding:40px 20px;
+
+    }
+
+    img{
+
+      width:100%;
+
+      border-radius:20px;
+
+      margin:20px 0;
+
+    }
+
+    h1{
+
+      font-size:48px;
+
+    }
+
+    #content{
+
+      line-height:1.8;
+
+      font-size:18px;
+
+      color:#d1d5db;
+
+    }
+
+    #meta{
+
+      color:#9ca3af;
+
+      margin-bottom:20px;
+
+    }
+
+  </style>
+
+</head>
+<body>
+
+  <div class="container">
+
+    <h1 id="title"></h1>
+
+    <div id="meta"></div>
+
+    <img id="image"/>
+
+    <div id="content"></div>
+
+  </div>
+
+</body>
+</html>
