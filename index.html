@@ -1,15 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   <title>Audiory Blog</title>
 
+  <meta
+    name="description"
+    content="Producer marketing, beat selling, music business and creator insights from Audiory."
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+
   <script type="module">
 
-    import { initializeApp }
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
     import {
       getFirestore,
@@ -17,8 +41,12 @@
       getDocs,
       query,
       orderBy
-    }
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+    // =========================================
+    // FIREBASE
+    // =========================================
 
     const firebaseConfig = {
 
@@ -41,52 +69,220 @@
     const db = getFirestore(app);
 
 
+    // =========================================
+    // LOAD POSTS
+    // =========================================
+
     async function loadPosts() {
 
       const container =
         document.getElementById("posts");
 
-      const q = query(
-        collection(db, "blogPosts"),
-        orderBy("createdAt", "desc")
-      );
+      const loading =
+        document.getElementById("loading");
 
-      const snapshot = await getDocs(q);
+      try {
 
-      snapshot.forEach((docSnap) => {
+        const q = query(
+          collection(db, "blogPosts"),
+          orderBy("createdAt", "desc")
+        );
 
-        const post = docSnap.data();
+        const snapshot = await getDocs(q);
 
-        const card = document.createElement("a");
+        loading.style.display = "none";
 
-        card.href =
-          `post.html?slug=${post.slug}`;
+        if (snapshot.empty) {
 
-        card.className = "card";
+          container.innerHTML = `
 
-        card.innerHTML = `
+            <div class="emptyState">
 
-          <img
-            src="${post.thumbnailURL || ''}"
-          />
+              <h2>
+                No blog posts yet
+              </h2>
 
-          <div class="content">
+              <p>
+                New producer insights and
+                music business articles
+                are coming soon.
+              </p>
 
-            <h2>${post.title}</h2>
+            </div>
 
-            <p>${post.excerpt || ''}</p>
+          `;
 
-            <small>
-              ${post.authorName || ''}
-            </small>
+          return;
 
-          </div>
+        }
+
+
+        let featuredDone = false;
+
+        snapshot.forEach((docSnap) => {
+
+          const post = docSnap.data();
+
+          const created =
+            post.createdAt?.toDate
+            ? post.createdAt.toDate()
+            : null;
+
+          const formattedDate =
+            created
+            ? created.toLocaleDateString(
+                "en-US",
+                {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric"
+                }
+              )
+            : "Audiory";
+
+
+          // =========================================
+          // FEATURED POST
+          // =========================================
+
+          if (!featuredDone) {
+
+            featuredDone = true;
+
+            const featured =
+              document.getElementById("featuredPost");
+
+            featured.innerHTML = `
+
+              <a
+                href="post.html?slug=${post.slug}"
+                class="featuredCard"
+              >
+
+                <div class="featuredImageWrap">
+
+                  <img
+                    src="${post.thumbnailURL || ''}"
+                    class="featuredImage"
+                  />
+
+                  <div class="featuredOverlay"></div>
+
+                </div>
+
+                <div class="featuredContent">
+
+                  <span class="featuredBadge">
+                    Featured Article
+                  </span>
+
+                  <h2>
+                    ${post.title}
+                  </h2>
+
+                  <p>
+                    ${post.excerpt || ''}
+                  </p>
+
+                  <div class="featuredMeta">
+
+                    <span>
+                      ${formattedDate}
+                    </span>
+
+                    <span class="dot"></span>
+
+                    <span>
+                      ${post.authorName || 'Audiory'}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </a>
+
+            `;
+
+            return;
+
+          }
+
+
+          // =========================================
+          // NORMAL POSTS
+          // =========================================
+
+          const card =
+            document.createElement("a");
+
+          card.href =
+            `post.html?slug=${post.slug}`;
+
+          card.className =
+            "card";
+
+
+          card.innerHTML = `
+
+            <div class="thumbWrap">
+
+              <img
+                src="${post.thumbnailURL || ''}"
+                class="thumb"
+              />
+
+            </div>
+
+            <div class="cardContent">
+
+              <div class="cardMeta">
+
+                <span>
+                  Audiory
+                </span>
+
+                <span class="dot"></span>
+
+                <span>
+                  ${formattedDate}
+                </span>
+
+              </div>
+
+              <h3>
+                ${post.title}
+              </h3>
+
+              <p>
+                ${post.excerpt || ''}
+              </p>
+
+              <div class="readMore">
+
+                Read article →
+
+              </div>
+
+            </div>
+
+          `;
+
+          container.appendChild(card);
+
+        });
+
+      } catch (error) {
+
+        console.error(error);
+
+        loading.innerHTML = `
+
+          Failed to load posts.
 
         `;
 
-        container.appendChild(card);
-
-      });
+      }
 
     }
 
@@ -94,119 +290,799 @@
 
   </script>
 
+
   <style>
 
     *{
+      margin:0;
+      padding:0;
       box-sizing:border-box;
+    }
+
+    html{
+      scroll-behavior:smooth;
     }
 
     body{
 
-      margin:0;
-
-      background:#050816;
+      background:
+      radial-gradient(
+        circle at top,
+        rgba(124,58,237,.25),
+        transparent 30%
+      ),
+      #050816;
 
       color:white;
 
-      font-family:Arial;
+      font-family:
+      "Inter",
+      sans-serif;
+
+      overflow-x:hidden;
 
     }
 
-    .hero{
 
-      padding:60px 20px;
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
-      text-align:center;
 
-      border-bottom:1px solid #1f2937;
+    /* ======================================
+       NAVBAR
+    ====================================== */
+
+    .navbar{
+
+      position:sticky;
+
+      top:0;
+
+      z-index:999;
+
+      backdrop-filter:blur(14px);
+
+      background:rgba(5,8,22,.7);
+
+      border-bottom:
+      1px solid rgba(255,255,255,.06);
 
     }
 
-    .hero h1{
+    .navInner{
 
-      font-size:48px;
+      max-width:1300px;
 
-      margin-bottom:10px;
+      margin:auto;
+
+      padding:18px 24px;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
 
     }
 
-    .hero p{
+    .logo{
+
+      font-size:24px;
+
+      font-weight:800;
+
+      letter-spacing:-1px;
+
+    }
+
+    .logo span{
+      color:#8b5cf6;
+    }
+
+    .navLinks{
+
+      display:flex;
+
+      gap:28px;
+
+      align-items:center;
+
+    }
+
+    .navLinks a{
 
       color:#9ca3af;
 
+      font-size:15px;
+
+      transition:.2s;
+
     }
 
-    .container{
+    .navLinks a:hover{
+      color:white;
+    }
+
+
+    /* ======================================
+       HERO
+    ====================================== */
+
+    .hero{
+
+      position:relative;
+
+      padding:
+      110px 24px 70px;
+
+      overflow:hidden;
+
+    }
+
+    .hero::before{
+
+      content:"";
+
+      position:absolute;
+
+      inset:0;
+
+      background:
+      linear-gradient(
+        to bottom,
+        rgba(139,92,246,.16),
+        transparent
+      );
+
+      pointer-events:none;
+
+    }
+
+    .heroInner{
 
       max-width:1200px;
 
       margin:auto;
 
-      padding:30px 20px;
+      position:relative;
 
+      z-index:2;
+
+    }
+
+    .heroBadge{
+
+      display:inline-flex;
+
+      align-items:center;
+
+      gap:8px;
+
+      padding:10px 16px;
+
+      border-radius:999px;
+
+      background:
+      rgba(255,255,255,.05);
+
+      border:
+      1px solid rgba(255,255,255,.08);
+
+      color:#cbd5e1;
+
+      font-size:14px;
+
+      margin-bottom:24px;
+
+    }
+
+    .hero h1{
+
+      font-size:72px;
+
+      line-height:1;
+
+      letter-spacing:-3px;
+
+      max-width:900px;
+
+      margin-bottom:24px;
+
+    }
+
+    .hero p{
+
+      color:#94a3b8;
+
+      max-width:720px;
+
+      line-height:1.8;
+
+      font-size:18px;
+
+    }
+
+
+    /* ======================================
+       FEATURED
+    ====================================== */
+
+    .section{
+
+      max-width:1300px;
+
+      margin:auto;
+
+      padding:0 24px;
+    }
+
+    .featuredSection{
+
+      margin-top:20px;
+      margin-bottom:70px;
+
+    }
+
+    .featuredCard{
+
+      display:grid;
+
+      grid-template-columns:
+      1.2fr 1fr;
+
+      overflow:hidden;
+
+      border-radius:34px;
+
+      background:
+      rgba(15,23,42,.75);
+
+      border:
+      1px solid rgba(255,255,255,.08);
+
+      min-height:520px;
+
+      transition:.3s;
+
+    }
+
+    .featuredCard:hover{
+
+      transform:
+      translateY(-5px);
+
+      border-color:
+      rgba(139,92,246,.5);
+
+    }
+
+    .featuredImageWrap{
+
+      position:relative;
+
+      overflow:hidden;
+
+    }
+
+    .featuredImage{
+
+      width:100%;
+      height:100%;
+
+      object-fit:cover;
+
+      transition:.5s;
+
+    }
+
+    .featuredCard:hover
+    .featuredImage{
+
+      transform:scale(1.04);
+
+    }
+
+    .featuredOverlay{
+
+      position:absolute;
+
+      inset:0;
+
+      background:
+      linear-gradient(
+        to top,
+        rgba(0,0,0,.55),
+        transparent
+      );
+
+    }
+
+    .featuredContent{
+
+      padding:60px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      justify-content:center;
+
+    }
+
+    .featuredBadge{
+
+      display:inline-flex;
+
+      width:max-content;
+
+      padding:10px 16px;
+
+      border-radius:999px;
+
+      background:
+      rgba(139,92,246,.14);
+
+      color:#c4b5fd;
+
+      font-size:14px;
+
+      font-weight:600;
+
+      margin-bottom:24px;
+
+    }
+
+    .featuredContent h2{
+
+      font-size:52px;
+
+      line-height:1.05;
+
+      margin-bottom:22px;
+
+      letter-spacing:-2px;
+
+    }
+
+    .featuredContent p{
+
+      color:#94a3b8;
+
+      line-height:1.9;
+
+      font-size:17px;
+
+      margin-bottom:30px;
+
+    }
+
+    .featuredMeta{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:12px;
+
+      color:#94a3b8;
+
+      font-size:14px;
+
+    }
+
+    .dot{
+
+      width:5px;
+      height:5px;
+
+      border-radius:999px;
+
+      background:#64748b;
+
+    }
+
+
+    /* ======================================
+       POSTS
+    ====================================== */
+
+    .postsHeader{
+
+      display:flex;
+
+      justify-content:space-between;
+
+      align-items:center;
+
+      margin-bottom:34px;
+
+    }
+
+    .postsHeader h2{
+
+      font-size:34px;
+
+      letter-spacing:-1px;
+
+    }
+
+    .postsHeader p{
+
+      color:#94a3b8;
     }
 
     .grid{
 
       display:grid;
 
-      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+      grid-template-columns:
+      repeat(
+        auto-fit,
+        minmax(320px,1fr)
+      );
 
-      gap:20px;
+      gap:28px;
+
+      margin-bottom:90px;
 
     }
 
     .card{
 
-      background:#0f172a;
+      background:
+      rgba(15,23,42,.8);
 
-      border-radius:20px;
+      border:
+      1px solid rgba(255,255,255,.08);
+
+      border-radius:28px;
 
       overflow:hidden;
 
-      text-decoration:none;
+      transition:.25s;
 
-      color:white;
+      display:flex;
 
-      border:1px solid #1e293b;
-
-      transition:.2s;
+      flex-direction:column;
 
     }
 
     .card:hover{
 
-      transform:translateY(-4px);
+      transform:
+      translateY(-6px);
+
+      border-color:
+      rgba(139,92,246,.45);
 
     }
 
-    .card img{
+    .thumbWrap{
 
-      width:100%;
+      overflow:hidden;
 
-      height:220px;
-
-      object-fit:cover;
+      height:240px;
 
       background:#111827;
 
     }
 
-    .content{
+    .thumb{
 
-      padding:20px;
+      width:100%;
+      height:100%;
+
+      object-fit:cover;
+
+      transition:.4s;
 
     }
 
-    h2{
+    .card:hover .thumb{
 
-      margin-top:0;
+      transform:scale(1.06);
 
     }
 
-    p{
+    .cardContent{
 
-      color:#9ca3af;
+      padding:28px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      flex:1;
+
+    }
+
+    .cardMeta{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:10px;
+
+      color:#94a3b8;
+
+      font-size:13px;
+
+      margin-bottom:18px;
+
+    }
+
+    .cardContent h3{
+
+      font-size:28px;
+
+      line-height:1.2;
+
+      margin-bottom:16px;
+
+      letter-spacing:-1px;
+
+    }
+
+    .cardContent p{
+
+      color:#94a3b8;
+
+      line-height:1.8;
+
+      margin-bottom:30px;
+
+      flex:1;
+
+    }
+
+    .readMore{
+
+      color:#c4b5fd;
+
+      font-weight:600;
+
+      font-size:15px;
+
+    }
+
+
+    /* ======================================
+       LOADING
+    ====================================== */
+
+    .loading{
+
+      padding:70px 20px;
+
+      text-align:center;
+
+      color:#94a3b8;
+
+      font-size:16px;
+
+    }
+
+    .emptyState{
+
+      padding:120px 20px;
+
+      text-align:center;
+
+      grid-column:1/-1;
+
+    }
+
+    .emptyState h2{
+
+      font-size:40px;
+
+      margin-bottom:18px;
+
+    }
+
+    .emptyState p{
+
+      color:#94a3b8;
+
+      max-width:500px;
+
+      margin:auto;
+
+      line-height:1.8;
+
+    }
+
+
+    /* ======================================
+       FOOTER
+    ====================================== */
+
+    footer{
+
+      border-top:
+      1px solid rgba(255,255,255,.08);
+
+      padding:70px 24px;
+
+      background:
+      rgba(255,255,255,.02);
+
+    }
+
+    .footerInner{
+
+      max-width:1300px;
+
+      margin:auto;
+
+      display:flex;
+
+      justify-content:space-between;
+
+      gap:40px;
+
+      flex-wrap:wrap;
+
+    }
+
+    .footerBrand{
+
+      max-width:450px;
+
+    }
+
+    .footerBrand h3{
+
+      font-size:28px;
+
+      margin-bottom:14px;
+
+    }
+
+    .footerBrand p{
+
+      color:#94a3b8;
+
+      line-height:1.8;
+
+    }
+
+    .footerLinks{
+
+      display:flex;
+
+      gap:80px;
+
+      flex-wrap:wrap;
+
+    }
+
+    .footerColumn{
+
+      display:flex;
+
+      flex-direction:column;
+
+      gap:14px;
+
+    }
+
+    .footerColumn h4{
+
+      margin-bottom:8px;
+
+      font-size:16px;
+
+    }
+
+    .footerColumn a{
+
+      color:#94a3b8;
+
+      transition:.2s;
+
+      font-size:15px;
+
+    }
+
+    .footerColumn a:hover{
+      color:white;
+    }
+
+    .copyright{
+
+      margin-top:60px;
+
+      text-align:center;
+
+      color:#64748b;
+
+      font-size:14px;
+
+    }
+
+
+    /* ======================================
+       MOBILE
+    ====================================== */
+
+    @media(max-width:980px){
+
+      .featuredCard{
+
+        grid-template-columns:1fr;
+
+      }
+
+      .featuredContent{
+
+        padding:34px;
+
+      }
+
+      .featuredContent h2{
+
+        font-size:38px;
+
+      }
+
+      .hero h1{
+
+        font-size:52px;
+
+      }
+
+    }
+
+    @media(max-width:700px){
+
+      .navLinks{
+        display:none;
+      }
+
+      .hero{
+
+        padding-top:80px;
+      }
+
+      .hero h1{
+
+        font-size:42px;
+
+        line-height:1.05;
+
+      }
+
+      .hero p{
+
+        font-size:16px;
+
+      }
+
+      .featuredContent h2{
+
+        font-size:32px;
+
+      }
+
+      .cardContent h3{
+
+        font-size:24px;
+
+      }
+
+      .postsHeader{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:12px;
+
+      }
 
     }
 
@@ -215,24 +1091,227 @@
 </head>
 <body>
 
-  <div class="hero">
 
-    <h1>Audiory Blog</h1>
+  <!-- NAVBAR -->
 
-    <p>
-      Music marketing, beat selling,
-      producer tips and industry insights.
-    </p>
+  <nav class="navbar">
 
-  </div>
+    <div class="navInner">
 
-  <div class="container">
+      <a href="/" class="logo">
 
-    <div class="grid" id="posts">
+        Audio<span>ry</span>
+
+      </a>
+
+      <div class="navLinks">
+
+        <a href="/">
+          Home
+        </a>
+
+        <a href="#">
+          Producer Tips
+        </a>
+
+        <a href="#">
+          Marketing
+        </a>
+
+        <a href="#">
+          Industry
+        </a>
+
+      </div>
 
     </div>
 
-  </div>
+  </nav>
+
+
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <div class="heroInner">
+
+      <div class="heroBadge">
+
+        🎵 Music Business & Producer Culture
+
+      </div>
+
+      <h1>
+
+        Insights for modern
+        producers and creators.
+
+      </h1>
+
+      <p>
+
+        Learn beat marketing, producer branding,
+        audience growth, streaming strategy,
+        industry trends and creative business
+        systems from the Audiory ecosystem.
+
+      </p>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- FEATURED -->
+
+  <section
+    class="section featuredSection"
+  >
+
+    <div id="featuredPost">
+
+      <div class="loading">
+
+        Loading featured article...
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- POSTS -->
+
+  <section class="section">
+
+    <div class="postsHeader">
+
+      <div>
+
+        <h2>
+          Latest Articles
+        </h2>
+
+        <p>
+          Producer knowledge, strategy
+          and music business insights.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="grid" id="posts">
+
+      <div
+        class="loading"
+        id="loading"
+      >
+
+        Loading articles...
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="footerInner">
+
+      <div class="footerBrand">
+
+        <h3>
+          Audiory
+        </h3>
+
+        <p>
+
+          Audiory helps producers,
+          artists and creators grow
+          through music technology,
+          beat commerce and creator
+          infrastructure.
+
+        </p>
+
+      </div>
+
+
+      <div class="footerLinks">
+
+        <div class="footerColumn">
+
+          <h4>
+            Platform
+          </h4>
+
+          <a href="/">
+            Home
+          </a>
+
+          <a href="#">
+            Marketplace
+          </a>
+
+          <a href="#">
+            Producers
+          </a>
+
+          <a href="#">
+            Pricing
+          </a>
+
+        </div>
+
+
+        <div class="footerColumn">
+
+          <h4>
+            Resources
+          </h4>
+
+          <a href="#">
+            Blog
+          </a>
+
+          <a href="#">
+            Creator Tips
+          </a>
+
+          <a href="#">
+            Marketing
+          </a>
+
+          <a href="#">
+            Industry News
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="copyright">
+
+      © 2026 Audiory.
+      All rights reserved.
+
+    </div>
+
+  </footer>
 
 </body>
 </html>
