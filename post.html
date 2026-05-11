@@ -10,17 +10,27 @@
   />
 
   <title>
-    Audiory Article
+    Audiory Blog Post
   </title>
 
   <meta
     name="description"
-    content="Audiory music business and producer insights."
+    content="Audiory music business, producer and marketing article."
   />
 
   <meta
     property="og:type"
     content="article"
+  />
+
+  <meta
+    property="og:title"
+    content="Audiory Blog"
+  />
+
+  <meta
+    property="og:description"
+    content="Producer tips, marketing and music industry insights."
   />
 
   <meta
@@ -89,6 +99,7 @@
 
     };
 
+
     const app =
       initializeApp(firebaseConfig);
 
@@ -113,50 +124,35 @@
 
 
     // =====================================
-    // FORMAT CONTENT
+    // SHARE ARTICLE
     // =====================================
 
-    function formatContent(text){
+    window.shareArticle = async function(){
 
-      if(!text) return "";
+      try{
 
-      return text
+        await navigator.share({
 
-      .split("\n")
+          title: document.title,
 
-      .map(line => {
+          text:
+          "Check out this article on Audiory Blog",
 
-        line = line.trim();
+          url: window.location.href
 
-        if(!line) return "";
+        });
 
-        if(line.startsWith("## ")){
+      }
 
-          return `
-            <h2>
-              ${line.replace("## ","")}
-            </h2>
-          `;
-        }
+      catch(error){
 
-        if(line.startsWith("- ")){
+        navigator.clipboard.writeText(
+          window.location.href
+        );
 
-          return `
-            <li>
-              ${line.replace("- ","")}
-            </li>
-          `;
-        }
+        alert("Link copied!");
 
-        return `
-          <p>
-            ${line}
-          </p>
-        `;
-
-      })
-
-      .join("");
+      }
 
     }
 
@@ -190,111 +186,94 @@
       if(snapshot.empty){
 
         document.getElementById(
-          "article"
-        ).innerHTML = `
+          "content"
+        ).innerHTML =
 
-          <div class="notFound">
-
-            <h1>
-              Article not found
-            </h1>
-
-            <a href="/">
-              Back to Blog
-            </a>
-
-          </div>
-
-        `;
+        "<h2>Post not found.</h2>";
 
         return;
 
       }
 
 
-      const post =
-        snapshot.docs[0].data();
+      snapshot.forEach(async (docSnap) => {
+
+        const post =
+          docSnap.data();
 
 
-      // SEO
-
-      document.title =
-        post.seoTitle || post.title;
-
-      document.querySelector(
-        'meta[name="description"]'
-      ).content =
-        post.seoDescription ||
-        post.excerpt ||
-        "";
+        document.title =
+          post.seoTitle ||
+          post.title;
 
 
-      // DATE
-
-      const created =
-        post.createdAt?.toDate
-        ? post.createdAt.toDate()
-        : null;
-
-      const formattedDate =
-        created
-        ? created.toLocaleDateString(
-            "en-US",
-            {
-              year:"numeric",
-              month:"long",
-              day:"numeric"
-            }
-          )
-        : "Audiory";
+        document.getElementById(
+          "title"
+        ).innerText =
+          post.title;
 
 
-      // CONTENT
-
-      document.getElementById(
-        "title"
-      ).innerText =
-        post.title;
-
-      document.getElementById(
-        "image"
-      ).src =
-        post.thumbnailURL || "";
-
-      document.getElementById(
-        "content"
-      ).innerHTML =
-        formatContent(post.content);
-
-      document.getElementById(
-        "author"
-      ).innerText =
-        post.authorName || "Audiory";
-
-      document.getElementById(
-        "date"
-      ).innerText =
-        formattedDate;
-
-      document.getElementById(
-        "category"
-      ).innerText =
-        post.category || "Article";
-
-      document.getElementById(
-        "readTime"
-      ).innerText =
-        post.readTime || "5 min read";
+        document.getElementById(
+          "heroImage"
+        ).src =
+          post.thumbnailURL || "";
 
 
-      loadRelated(
-        post.category,
-        slug
-      );
+        document.getElementById(
+          "content"
+        ).innerHTML =
+          post.content || "";
+
+
+        document.getElementById(
+          "author"
+        ).innerText =
+          post.authorName || "Audiory";
+
+
+        document.getElementById(
+          "category"
+        ).innerText =
+          post.category || "Article";
+
+
+        document.getElementById(
+          "readTime"
+        ).innerText =
+          post.readTime || "5 min read";
+
+
+        const created =
+          post.createdAt?.toDate
+          ? post.createdAt.toDate()
+          : null;
+
+        const formattedDate =
+          created
+          ? created.toLocaleDateString(
+              "en-US",
+              {
+                year:"numeric",
+                month:"long",
+                day:"numeric"
+              }
+            )
+          : "Audiory";
+
+        document.getElementById(
+          "date"
+        ).innerText =
+          formattedDate;
+
+
+        loadRelated(
+          post.category,
+          post.slug
+        );
+
+      });
 
     }
-
-    loadPost();
 
 
 
@@ -314,11 +293,8 @@
 
       const q = query(
         collection(db, "blogPosts"),
-        where(
-          "category",
-          "==",
-          category
-        )
+        where("category", "==", category),
+        limit(3)
       );
 
       const snapshot =
@@ -332,9 +308,10 @@
         const post =
           docSnap.data();
 
-        if(post.slug === currentSlug){
-          return;
-        }
+        if(
+          post.slug === currentSlug
+        ) return;
+
 
         const card =
           document.createElement("a");
@@ -345,11 +322,17 @@
         card.className =
           "relatedCard";
 
+
         card.innerHTML = `
 
-          <img
-            src="${post.thumbnailURL || ''}"
-          />
+          <div class="relatedThumbWrap">
+
+            <img
+              src="${post.thumbnailURL || ''}"
+              class="relatedThumb"
+            />
+
+          </div>
 
           <div class="relatedContent">
 
@@ -381,6 +364,9 @@
 
     }
 
+
+    loadPost();
+
   </script>
 
 
@@ -398,7 +384,7 @@
       background:
       radial-gradient(
         circle at top,
-        rgba(124,58,237,.18),
+        rgba(124,58,237,.20),
         transparent 30%
       ),
       #050816;
@@ -432,7 +418,7 @@
 
       z-index:999;
 
-      backdrop-filter:blur(18px);
+      backdrop-filter:blur(16px);
 
       background:
       rgba(5,8,22,.7);
@@ -510,15 +496,44 @@
 
     }
 
-
-
-    /* =========================
-       MOBILE MENU
-    ========================== */
-
-    .menuBtn{
+    .mobileActions{
 
       display:none;
+
+      align-items:center;
+
+      gap:12px;
+
+    }
+
+    .shareBtn{
+
+      border:none;
+
+      cursor:pointer;
+
+      background:
+      rgba(255,255,255,.06);
+
+      color:white;
+
+      height:48px;
+
+      padding:0 18px;
+
+      border-radius:14px;
+
+      font-size:15px;
+
+      font-weight:700;
+
+    }
+
+    .desktopShare{
+      height:44px;
+    }
+
+    .menuBtn{
 
       width:48px;
       height:48px;
@@ -538,20 +553,26 @@
 
     }
 
+
+
+    /* =========================
+       MOBILE MENU
+    ========================== */
+
     .mobileMenu{
 
       display:none;
 
       flex-direction:column;
 
-      padding:20px 24px;
+      padding:24px;
 
-      gap:18px;
+      gap:22px;
 
       border-top:
       1px solid rgba(255,255,255,.06);
 
-      background:#0b1020;
+      background:#050b1d;
 
     }
 
@@ -559,7 +580,23 @@
 
       color:#d1d5db;
 
-      font-size:15px;
+      font-size:17px;
+
+    }
+
+    .mobileMainBtn{
+
+      background:#8b5cf6;
+
+      padding:18px;
+
+      border-radius:18px;
+
+      text-align:center;
+
+      color:white !important;
+
+      font-weight:700;
 
     }
 
@@ -573,27 +610,31 @@
        ARTICLE
     ========================== */
 
-    .articleWrap{
-
-      max-width:950px;
-
-      margin:auto;
+    .articleHero{
 
       padding:
-      80px 24px 100px;
+      90px 24px 60px;
 
     }
 
-    .category{
+    .articleHeroInner{
+
+      max-width:1100px;
+
+      margin:auto;
+
+    }
+
+    .categoryBadge{
 
       display:inline-flex;
 
-      padding:10px 16px;
+      padding:12px 18px;
 
       border-radius:999px;
 
       background:
-      rgba(139,92,246,.15);
+      rgba(139,92,246,.14);
 
       color:#c4b5fd;
 
@@ -601,37 +642,41 @@
 
       font-weight:700;
 
+      margin-bottom:26px;
+
       text-transform:capitalize;
 
+    }
+
+    .articleTitle{
+
+      font-size:78px;
+
+      line-height:.95;
+
+      letter-spacing:-4px;
+
+      max-width:900px;
+
       margin-bottom:28px;
 
     }
 
-    h1{
-
-      font-size:64px;
-
-      line-height:1;
-
-      letter-spacing:-3px;
-
-      margin-bottom:28px;
-
-    }
-
-    .meta{
+    .articleMeta{
 
       display:flex;
 
-      flex-wrap:wrap;
+      align-items:center;
 
       gap:14px;
 
       color:#94a3b8;
 
-      margin-bottom:36px;
-
       font-size:15px;
+
+      margin-bottom:40px;
+
+      flex-wrap:wrap;
 
     }
 
@@ -644,8 +689,6 @@
 
       background:#64748b;
 
-      margin-top:8px;
-
     }
 
     .heroImage{
@@ -654,7 +697,9 @@
 
       border-radius:34px;
 
-      margin-bottom:50px;
+      max-height:620px;
+
+      object-fit:cover;
 
       border:
       1px solid rgba(255,255,255,.06);
@@ -667,51 +712,81 @@
        CONTENT
     ========================== */
 
+    .contentWrap{
+
+      max-width:900px;
+
+      margin:auto;
+
+      padding:
+      0 24px 100px;
+
+    }
+
     #content{
 
       color:#d1d5db;
+
+      line-height:2;
+
+      font-size:18px;
 
     }
 
     #content p{
 
-      font-size:20px;
-
-      line-height:2;
-
-      margin-bottom:28px;
-
-      color:#d1d5db;
+      margin-bottom:30px;
 
     }
 
     #content h2{
 
+      margin-top:50px;
+
+      margin-bottom:20px;
+
       font-size:38px;
 
       line-height:1.2;
-
-      margin-top:60px;
-
-      margin-bottom:24px;
-
-      letter-spacing:-1px;
 
       color:white;
 
     }
 
+    #content h3{
+
+      margin-top:40px;
+
+      margin-bottom:18px;
+
+      font-size:28px;
+
+      color:white;
+
+    }
+
+    #content img{
+
+      width:100%;
+
+      border-radius:24px;
+
+      margin:40px 0;
+
+    }
+
+    #content ul,
+    #content ol{
+
+      padding-left:24px;
+
+      margin-bottom:30px;
+
+    }
+
     #content li{
 
-      margin-left:24px;
-
       margin-bottom:14px;
-
-      line-height:1.8;
-
-      color:#d1d5db;
-
-      font-size:18px;
 
     }
 
@@ -723,17 +798,33 @@
 
     .relatedSection{
 
-      margin-top:100px;
+      max-width:1300px;
+
+      margin:auto;
+
+      padding:0 24px 100px;
 
     }
 
-    .relatedSection h2{
+    .relatedHeader{
+
+      margin-bottom:34px;
+
+    }
+
+    .relatedHeader h2{
 
       font-size:42px;
 
-      margin-bottom:30px;
-
       letter-spacing:-2px;
+
+      margin-bottom:10px;
+
+    }
+
+    .relatedHeader p{
+
+      color:#94a3b8;
 
     }
 
@@ -744,7 +835,7 @@
       grid-template-columns:
       repeat(
         auto-fit,
-        minmax(280px,1fr)
+        minmax(300px,1fr)
       );
 
       gap:24px;
@@ -754,10 +845,10 @@
     .relatedCard{
 
       background:
-      rgba(15,23,42,.8);
+      rgba(15,23,42,.72);
 
       border:
-      1px solid rgba(255,255,255,.06);
+      1px solid rgba(255,255,255,.05);
 
       border-radius:24px;
 
@@ -773,14 +864,22 @@
       translateY(-5px);
 
       border-color:
-      rgba(139,92,246,.35);
+      rgba(139,92,246,.25);
 
     }
 
-    .relatedCard img{
+    .relatedThumbWrap{
+
+      height:220px;
+
+      overflow:hidden;
+
+    }
+
+    .relatedThumb{
 
       width:100%;
-      height:200px;
+      height:100%;
 
       object-fit:cover;
 
@@ -788,7 +887,7 @@
 
     .relatedContent{
 
-      padding:22px;
+      padding:24px;
 
     }
 
@@ -798,21 +897,21 @@
 
       font-size:13px;
 
-      font-weight:700;
+      margin-bottom:14px;
 
       text-transform:capitalize;
 
-      margin-bottom:12px;
+      font-weight:700;
 
     }
 
     .relatedContent h3{
 
-      font-size:24px;
+      font-size:26px;
 
       line-height:1.2;
 
-      margin-bottom:14px;
+      margin-bottom:16px;
 
     }
 
@@ -820,9 +919,7 @@
 
       color:#94a3b8;
 
-      line-height:1.7;
-
-      font-size:15px;
+      line-height:1.8;
 
     }
 
@@ -902,12 +999,6 @@
 
     }
 
-    .footerColumn h4{
-
-      margin-bottom:4px;
-
-    }
-
     .footerColumn a{
 
       color:#94a3b8;
@@ -929,48 +1020,14 @@
 
 
     /* =========================
-       NOT FOUND
-    ========================== */
-
-    .notFound{
-
-      text-align:center;
-
-      padding:120px 20px;
-
-    }
-
-    .notFound h1{
-
-      font-size:52px;
-
-      margin-bottom:20px;
-
-    }
-
-
-
-    /* =========================
        MOBILE
     ========================== */
 
     @media(max-width:900px){
 
-      h1{
+      .articleTitle{
 
-        font-size:48px;
-
-      }
-
-      #content p{
-
-        font-size:18px;
-
-      }
-
-      #content h2{
-
-        font-size:32px;
+        font-size:54px;
 
       }
 
@@ -982,39 +1039,37 @@
         display:none;
       }
 
-      .menuBtn{
-        display:block;
+      .mobileActions{
+        display:flex;
       }
 
-      .articleWrap{
+      .articleHero{
 
-        padding-top:50px;
-
-      }
-
-      h1{
-
-        font-size:40px;
-
-        line-height:1.05;
+        padding-top:60px;
 
       }
 
-      #content p{
+      .articleTitle{
+
+        font-size:46px;
+
+        line-height:1.02;
+
+      }
+
+      #content{
 
         font-size:17px;
-
-        line-height:1.9;
 
       }
 
       #content h2{
 
-        font-size:28px;
+        font-size:30px;
 
       }
 
-      .relatedSection h2{
+      .relatedHeader h2{
 
         font-size:34px;
 
@@ -1060,6 +1115,13 @@
           Industry
         </a>
 
+        <button
+          class="shareBtn desktopShare"
+          onclick="shareArticle()"
+        >
+          Share
+        </button>
+
         <a
           href="https://audiory.site"
           class="mainBtn"
@@ -1070,17 +1132,26 @@
       </div>
 
 
-      <button
-        class="menuBtn"
-        onclick="toggleMenu()"
-      >
-        ☰
-      </button>
+      <div class="mobileActions">
+
+        <button
+          class="shareBtn"
+          onclick="shareArticle()"
+        >
+          ↗
+        </button>
+
+        <button
+          class="menuBtn"
+          onclick="toggleMenu()"
+        >
+          ☰
+        </button>
+
+      </div>
 
     </div>
 
-
-    <!-- MOBILE MENU -->
 
     <div
       class="mobileMenu"
@@ -1103,7 +1174,10 @@
         Industry
       </a>
 
-      <a href="https://audiory.site">
+      <a
+        href="https://audiory.site"
+        class="mobileMainBtn"
+      >
         Main Website
       </a>
 
@@ -1114,79 +1188,102 @@
 
 
 
+  <!-- ARTICLE HERO -->
 
-  <!-- ARTICLE -->
+  <section class="articleHero">
 
-  <main
-    class="articleWrap"
-    id="article"
-  >
+    <div class="articleHeroInner">
 
-    <div
-      class="category"
-      id="category"
-    >
-      Article
+      <div
+        class="categoryBadge"
+        id="category"
+      >
+        Article
+      </div>
+
+
+      <h1
+        class="articleTitle"
+        id="title"
+      >
+        Loading...
+      </h1>
+
+
+      <div class="articleMeta">
+
+        <span id="author">
+          Audiory
+        </span>
+
+        <span class="dot"></span>
+
+        <span id="date">
+          Date
+        </span>
+
+        <span class="dot"></span>
+
+        <span id="readTime">
+          5 min read
+        </span>
+
+      </div>
+
+
+      <img
+        id="heroImage"
+        class="heroImage"
+      />
+
     </div>
 
-
-    <h1 id="title">
-
-    </h1>
+  </section>
 
 
-    <div class="meta">
-
-      <span id="author">
-
-      </span>
-
-      <div class="dot"></div>
-
-      <span id="date">
-
-      </span>
-
-      <div class="dot"></div>
-
-      <span id="readTime">
-
-      </span>
-
-    </div>
 
 
-    <img
-      id="image"
-      class="heroImage"
-    />
+  <!-- CONTENT -->
 
+  <section class="contentWrap">
 
     <div id="content">
 
+      Loading article...
+
     </div>
 
+  </section>
 
 
-    <!-- RELATED -->
 
-    <section class="relatedSection">
+
+  <!-- RELATED -->
+
+  <section class="relatedSection">
+
+    <div class="relatedHeader">
 
       <h2>
         Related Articles
       </h2>
 
-      <div
-        class="relatedGrid"
-        id="relatedPosts"
-      >
+      <p>
+        More producer knowledge and
+        music business insights.
+      </p>
 
-      </div>
+    </div>
 
-    </section>
 
-  </main>
+    <div
+      class="relatedGrid"
+      id="relatedPosts"
+    >
 
+    </div>
+
+  </section>
 
 
 
@@ -1207,9 +1304,10 @@
 
           Audiory powers the next
           generation of producers,
-          artists and creators through
-          creator tools, beat commerce
-          and music infrastructure.
+          artists and creators
+          through creator tools,
+          beat commerce and music
+          infrastructure.
 
         </p>
 
@@ -1249,8 +1347,8 @@
             Main Website
           </a>
 
-          <a href="/">
-            Blog Home
+          <a href="https://audiory.site/marketplace/">
+            Marketplace
           </a>
 
         </div>
