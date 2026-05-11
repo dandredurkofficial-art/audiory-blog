@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8"/>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>
+    Audiory Blog
+  </title>
+
+  <meta
+    name="description"
+    content="Producer marketing, beat selling, music business and creator insights from Audiory."
+  />
+
+  <meta
+    property="og:type"
+    content="website"
+  />
+
+  <meta
+    property="og:title"
+    content="Audiory Blog"
+  />
+
+  <meta
+    property="og:description"
+    content="Producer marketing, beat selling and music business insights."
+  />
+
+  <meta
+    name="twitter:card"
+    content="summary_large_image"
+  />
+
+  <meta
+    name="theme-color"
+    content="#050816"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+
+
+  <script type="module">
+
+    import {
+      initializeApp
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      orderBy
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+
+    // ======================================
+    // FIREBASE
+    // ======================================
+
+    const firebaseConfig = {
+
+      apiKey:
+      "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
+
+      authDomain:
+      "audiory-beat-store.firebaseapp.com",
+
+      projectId:
+      "audiory-beat-store",
+
+      storageBucket:
+      "audiory-beat-store.firebasestorage.app",
+
+      messagingSenderId:
+      "688272560511",
+
+      appId:
+      "1:688272560511:web:9031e6ce215d6f08764a4a"
+
+    };
+
+
+    const app =
+      initializeApp(firebaseConfig);
+
+    const db =
+      getFirestore(app);
+
+
+    // ======================================
+    // LOAD POSTS
+    // ======================================
+
+    async function loadPosts(){
+
+      const container =
+        document.getElementById("posts");
+
+      const loading =
+        document.getElementById("loading");
+
+      try{
+
+        const q = query(
+          collection(db, "blogPosts"),
+          orderBy("createdAt", "desc")
+        );
+
+        const snapshot =
+          await getDocs(q);
+
+        loading.style.display =
+          "none";
+
+
+        if(snapshot.empty){
+
+          container.innerHTML = `
+
+            <div class="emptyState">
+
+              <h2>
+                No articles yet
+              </h2>
+
+              <p>
+                Articles will appear here soon.
+              </p>
+
+            </div>
+
+          `;
+
+          return;
+
+        }
+
+
+        let featuredDone = false;
+
+
+        snapshot.forEach((docSnap) => {
+
+          const post =
+            docSnap.data();
+
+          const created =
+            post.createdAt?.toDate
+            ? post.createdAt.toDate()
+            : null;
+
+          const formattedDate =
+            created
+            ? created.toLocaleDateString(
+                "en-US",
+                {
+                  year:"numeric",
+                  month:"long",
+                  day:"numeric"
+                }
+              )
+            : "Audiory";
+
+
+          // FEATURED POST
+
+          if(!featuredDone){
+
+            featuredDone = true;
+
+            const featured =
+              document.getElementById(
+                "featuredPost"
+              );
+
+            featured.innerHTML = `
+
+              <a
+                href="/post.html?slug=${post.slug}"
+                class="featuredCard"
+              >
+
+                <div class="featuredImageWrap">
+
+                  <img
+                    src="${post.thumbnailURL || ''}"
+                    class="featuredImage"
+                  />
+
+                  <div class="featuredOverlay"></div>
+
+                </div>
+
+                <div class="featuredContent">
+
+                  <span class="featuredBadge">
+
+                    ${post.category || 'Featured'}
+
+                  </span>
+
+                  <h2>
+
+                    ${post.title}
+
+                  </h2>
+
+                  <p>
+
+                    ${post.excerpt || ''}
+
+                  </p>
+
+                  <div class="featuredMeta">
+
+                    <span>
+                      ${formattedDate}
+                    </span>
+
+                    <span class="dot"></span>
+
+                    <span>
+                      ${post.authorName || 'Audiory'}
+                    </span>
+
+                  </div>
+
+                  <div class="featuredButton">
+
+                    Read Article →
+
+                  </div>
+
+                </div>
+
+              </a>
+
+            `;
+
+            return;
+
+          }
+
+
+          // NORMAL POSTS
+
+          const card =
+            document.createElement("a");
+
+          card.href =
+            `/post.html?slug=${post.slug}`;
+
+          card.className =
+            "card";
+
+
+          card.innerHTML = `
+
+            <div class="thumbWrap">
+
+              <img
+                src="${post.thumbnailURL || ''}"
+                class="thumb"
+              />
+
+              <div class="thumbGradient"></div>
+
+              <div class="categoryTag">
+
+                ${post.category || 'Article'}
+
+              </div>
+
+            </div>
+
+
+            <div class="cardContent">
+
+              <div class="cardMeta">
+
+                <span>
+                  ${formattedDate}
+                </span>
+
+                <span class="dot"></span>
+
+                <span>
+                  ${post.authorName || 'Audiory'}
+                </span>
+
+              </div>
+
+
+              <h3>
+
+                ${post.title}
+
+              </h3>
+
+
+              <p>
+
+                ${post.excerpt || ''}
+
+              </p>
+
+
+              <div class="readMore">
+
+                Read article →
+
+              </div>
+
+            </div>
+
+          `;
+
+          container.appendChild(card);
+
+        });
+
+      }
+
+      catch(error){
+
+        console.error(error);
+
+        loading.innerHTML =
+          "Failed to load articles.";
+
+      }
+
+    }
+
+    loadPosts();
+
+  </script>
+
+
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+
+      background:
+      radial-gradient(
+        circle at top,
+        rgba(124,58,237,.25),
+        transparent 30%
+      ),
+      #050816;
+
+      color:white;
+
+      font-family:
+      "Inter",
+      sans-serif;
+
+      overflow-x:hidden;
+
+    }
+
+    a{
+      text-decoration:none;
+      color:inherit;
+    }
+
+
+    /* =========================
+       NAVBAR
+    ========================== */
+
+    .navbar{
+
+      position:sticky;
+
+      top:0;
+
+      z-index:999;
+
+      backdrop-filter:blur(16px);
+
+      background:
+      rgba(5,8,22,.7);
+
+      border-bottom:
+      1px solid rgba(255,255,255,.05);
+
+    }
+
+    .navInner{
+
+      max-width:1300px;
+
+      margin:auto;
+
+      padding:20px 24px;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
+
+    }
+
+    .logo{
+
+      font-size:30px;
+
+      font-weight:900;
+
+      letter-spacing:-1px;
+
+    }
+
+    .logo span{
+      color:#8b5cf6;
+    }
+
+    .navLinks{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:28px;
+
+    }
+
+    .navLinks a{
+
+      color:#94a3b8;
+
+      transition:.2s;
+
+      font-size:15px;
+
+    }
+
+    .navLinks a:hover{
+      color:white;
+    }
+
+    .mainBtn{
+
+      background:#8b5cf6;
+
+      color:white !important;
+
+      padding:12px 18px;
+
+      border-radius:14px;
+
+      font-weight:700;
+
+    }
+
+
+    /* =========================
+       HERO
+    ========================== */
+
+    .hero{
+
+      padding:
+      120px 24px 80px;
+
+    }
+
+    .heroInner{
+
+      max-width:1200px;
+
+      margin:auto;
+
+    }
+
+    .heroBadge{
+
+      display:inline-flex;
+
+      padding:12px 18px;
+
+      border-radius:999px;
+
+      background:
+      rgba(255,255,255,.05);
+
+      border:
+      1px solid rgba(255,255,255,.06);
+
+      color:#d1d5db;
+
+      margin-bottom:28px;
+
+      font-size:14px;
+
+    }
+
+    .hero h1{
+
+      font-size:78px;
+
+      line-height:.95;
+
+      letter-spacing:-4px;
+
+      max-width:900px;
+
+      margin-bottom:26px;
+
+    }
+
+    .hero p{
+
+      color:#94a3b8;
+
+      max-width:700px;
+
+      line-height:1.9;
+
+      font-size:18px;
+
+    }
+
+
+    /* =========================
+       SECTION
+    ========================== */
+
+    .section{
+
+      max-width:1300px;
+
+      margin:auto;
+
+      padding:0 24px;
+
+    }
+
+
+    /* =========================
+       FEATURED
+    ========================== */
+
+    .featuredSection{
+
+      margin-bottom:90px;
+
+    }
+
+    .featuredCard{
+
+      display:grid;
+
+      grid-template-columns:
+      1.15fr 1fr;
+
+      overflow:hidden;
+
+      border-radius:34px;
+
+      background:
+      rgba(15,23,42,.85);
+
+      border:
+      1px solid rgba(255,255,255,.08);
+
+      min-height:520px;
+
+      transition:.3s;
+
+    }
+
+    .featuredCard:hover{
+
+      transform:
+      translateY(-5px);
+
+      border-color:
+      rgba(139,92,246,.35);
+
+    }
+
+    .featuredImageWrap{
+
+      position:relative;
+
+      overflow:hidden;
+
+    }
+
+    .featuredImage{
+
+      width:100%;
+      height:100%;
+
+      object-fit:cover;
+
+      transition:.5s;
+
+    }
+
+    .featuredCard:hover
+    .featuredImage{
+
+      transform:scale(1.04);
+
+    }
+
+    .featuredOverlay{
+
+      position:absolute;
+
+      inset:0;
+
+      background:
+      linear-gradient(
+        to top,
+        rgba(0,0,0,.55),
+        transparent
+      );
+
+    }
+
+    .featuredContent{
+
+      padding:60px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      justify-content:center;
+
+    }
+
+    .featuredBadge{
+
+      display:inline-flex;
+
+      width:max-content;
+
+      padding:10px 16px;
+
+      border-radius:999px;
+
+      background:
+      rgba(139,92,246,.15);
+
+      color:#c4b5fd;
+
+      margin-bottom:24px;
+
+      font-size:14px;
+
+      font-weight:700;
+
+      text-transform:capitalize;
+
+    }
+
+    .featuredContent h2{
+
+      font-size:54px;
+
+      line-height:1;
+
+      letter-spacing:-2px;
+
+      margin-bottom:20px;
+
+    }
+
+    .featuredContent p{
+
+      color:#94a3b8;
+
+      line-height:1.9;
+
+      font-size:17px;
+
+      margin-bottom:30px;
+
+    }
+
+    .featuredMeta{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:12px;
+
+      color:#94a3b8;
+
+      font-size:14px;
+
+      margin-bottom:28px;
+
+    }
+
+    .dot{
+
+      width:5px;
+      height:5px;
+
+      border-radius:999px;
+
+      background:#64748b;
+
+    }
+
+    .featuredButton{
+
+      color:#c4b5fd;
+
+      font-weight:700;
+
+    }
+
+
+    /* =========================
+       POSTS
+    ========================== */
+
+    .postsHeader{
+
+      margin-bottom:34px;
+
+    }
+
+    .postsHeader h2{
+
+      font-size:42px;
+
+      letter-spacing:-2px;
+
+      margin-bottom:10px;
+
+    }
+
+    .postsHeader p{
+
+      color:#94a3b8;
+
+      font-size:16px;
+
+    }
+
+    .grid{
+
+      display:grid;
+
+      grid-template-columns:
+      repeat(
+        auto-fit,
+        minmax(280px,1fr)
+      );
+
+      gap:22px;
+
+      margin-bottom:100px;
+
+    }
+
+    .card{
+
+      background:
+      rgba(15,23,42,.72);
+
+      border:
+      1px solid rgba(255,255,255,.05);
+
+      border-radius:22px;
+
+      overflow:hidden;
+
+      transition:.22s;
+
+      display:flex;
+
+      flex-direction:column;
+
+      min-height:420px;
+
+    }
+
+    .card:hover{
+
+      transform:
+      translateY(-5px);
+
+      border-color:
+      rgba(139,92,246,.28);
+
+    }
+
+    .thumbWrap{
+
+      position:relative;
+
+      height:180px;
+
+      overflow:hidden;
+
+      background:#111827;
+
+    }
+
+    .thumb{
+
+      width:100%;
+      height:100%;
+
+      object-fit:cover;
+
+      transition:.35s;
+
+    }
+
+    .card:hover .thumb{
+
+      transform:scale(1.04);
+
+    }
+
+    .thumbGradient{
+
+      position:absolute;
+
+      inset:0;
+
+      background:
+      linear-gradient(
+        to top,
+        rgba(0,0,0,.45),
+        transparent
+      );
+
+    }
+
+    .categoryTag{
+
+      position:absolute;
+
+      top:14px;
+      left:14px;
+
+      padding:8px 12px;
+
+      border-radius:999px;
+
+      background:
+      rgba(0,0,0,.45);
+
+      backdrop-filter:blur(8px);
+
+      font-size:12px;
+
+      font-weight:700;
+
+      text-transform:capitalize;
+
+    }
+
+    .cardContent{
+
+      padding:22px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      flex:1;
+
+    }
+
+    .cardMeta{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:10px;
+
+      color:#94a3b8;
+
+      font-size:12px;
+
+      margin-bottom:16px;
+
+    }
+
+    .cardContent h3{
+
+      font-size:24px;
+
+      line-height:1.25;
+
+      letter-spacing:-1px;
+
+      margin-bottom:14px;
+
+      font-weight:800;
+
+    }
+
+    .cardContent p{
+
+      color:#94a3b8;
+
+      line-height:1.7;
+
+      font-size:15px;
+
+      margin-bottom:22px;
+
+      flex:1;
+
+    }
+
+    .readMore{
+
+      color:#c4b5fd;
+
+      font-weight:700;
+
+      font-size:14px;
+
+    }
+
+
+    /* =========================
+       FOOTER
+    ========================== */
+
+    footer{
+
+      border-top:
+      1px solid rgba(255,255,255,.06);
+
+      padding:80px 24px;
+
+      background:
+      rgba(255,255,255,.02);
+
+    }
+
+    .footerInner{
+
+      max-width:1300px;
+
+      margin:auto;
+
+      display:flex;
+
+      justify-content:space-between;
+
+      gap:50px;
+
+      flex-wrap:wrap;
+
+    }
+
+    .footerBrand{
+
+      max-width:450px;
+
+    }
+
+    .footerBrand h3{
+
+      font-size:30px;
+
+      margin-bottom:18px;
+
+    }
+
+    .footerBrand p{
+
+      color:#94a3b8;
+
+      line-height:1.9;
+
+    }
+
+    .footerLinks{
+
+      display:flex;
+
+      gap:80px;
+
+      flex-wrap:wrap;
+
+    }
+
+    .footerColumn{
+
+      display:flex;
+
+      flex-direction:column;
+
+      gap:16px;
+
+    }
+
+    .footerColumn a{
+
+      color:#94a3b8;
+
+    }
+
+    .copyright{
+
+      margin-top:70px;
+
+      text-align:center;
+
+      color:#64748b;
+
+      font-size:14px;
+
+    }
+
+
+    /* =========================
+       MOBILE
+    ========================== */
+
+    @media(max-width:980px){
+
+      .featuredCard{
+
+        grid-template-columns:1fr;
+
+      }
+
+      .featuredContent{
+
+        padding:34px;
+
+      }
+
+      .featuredContent h2{
+
+        font-size:38px;
+
+      }
+
+      .hero h1{
+
+        font-size:54px;
+
+      }
+
+    }
+
+    @media(max-width:700px){
+
+      .navLinks{
+        display:none;
+      }
+
+      .hero{
+
+        padding-top:90px;
+
+      }
+
+      .hero h1{
+
+        font-size:42px;
+
+      }
+
+      .hero p{
+
+        font-size:16px;
+
+      }
+
+      .featuredContent h2{
+
+        font-size:32px;
+
+      }
+
+      .cardContent h3{
+
+        font-size:22px;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+<body>
+
+
+  <!-- NAVBAR -->
+
+  <nav class="navbar">
+
+    <div class="navInner">
+
+      <a href="/" class="logo">
+
+        Audio<span>ry</span>
+
+      </a>
+
+
+      <div class="navLinks">
+
+        <a href="/">
+          Home
+        </a>
+
+        <a href="/producer-tips/">
+          Producer Tips
+        </a>
+
+        <a href="/marketing/">
+          Marketing
+        </a>
+
+        <a href="/industry/">
+          Industry
+        </a>
+
+        <a
+          href="https://audiory.site"
+          class="mainBtn"
+        >
+          Main Website
+        </a>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+
+
+  <!-- HERO -->
+
+  <section class="hero">
+
+    <div class="heroInner">
+
+      <div class="heroBadge">
+
+        🎵 Audiory Creator Journal
+
+      </div>
+
+      <h1>
+
+        Insights for modern
+        producers & creators.
+
+      </h1>
+
+      <p>
+
+        Learn producer branding,
+        beat selling, music marketing,
+        streaming growth and creator
+        economy systems from Audiory.
+
+      </p>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- FEATURED -->
+
+  <section
+    class="section featuredSection"
+  >
+
+    <div id="featuredPost">
+
+      <div class="loading">
+
+        Loading featured article...
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- POSTS -->
+
+  <section class="section">
+
+    <div class="postsHeader">
+
+      <h2>
+        Latest Articles
+      </h2>
+
+      <p>
+        Curated producer knowledge,
+        music business and marketing.
+      </p>
+
+    </div>
+
+
+    <div class="grid" id="posts">
+
+      <div
+        class="loading"
+        id="loading"
+      >
+
+        Loading articles...
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="footerInner">
+
+      <div class="footerBrand">
+
+        <h3>
+          Audiory
+        </h3>
+
+        <p>
+
+          Audiory powers the next
+          generation of producers,
+          artists and creators
+          through creator tools,
+          beat commerce and music
+          infrastructure.
+
+        </p>
+
+      </div>
+
+
+      <div class="footerLinks">
+
+        <div class="footerColumn">
+
+          <h4>
+            Categories
+          </h4>
+
+          <a href="/producer-tips/">
+            Producer Tips
+          </a>
+
+          <a href="/marketing/">
+            Marketing
+          </a>
+
+          <a href="/industry/">
+            Industry
+          </a>
+
+        </div>
+
+
+        <div class="footerColumn">
+
+          <h4>
+            Platform
+          </h4>
+
+          <a href="https://audiory.site">
+            Main Website
+          </a>
+
+          <a href="https://audiory.site/marketplace/">
+            Marketplace
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="copyright">
+
+      © 2026 Audiory.
+      All rights reserved.
+
+    </div>
+
+  </footer>
+
+</body>
+</html>
