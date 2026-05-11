@@ -1,14 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Audiory Blog Dashboard</title>
+  <meta charset="UTF-8"/>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>
+    Audiory Blog CMS
+  </title>
+
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+
+
 
   <script type="module">
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      initializeApp
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
     import {
       getFirestore,
@@ -22,66 +51,92 @@
       query,
       deleteDoc,
       updateDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
     import {
       getAuth,
       signInWithEmailAndPassword,
       onAuthStateChanged,
       signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
 
     import {
       getStorage,
       ref,
       uploadBytes,
       getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 
+
+    // =====================================
     // FIREBASE CONFIG
+    // =====================================
 
     const firebaseConfig = {
 
-      apiKey: "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
+      apiKey:
+      "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
 
-      authDomain: "audiory-beat-store.firebaseapp.com",
+      authDomain:
+      "audiory-beat-store.firebaseapp.com",
 
-      projectId: "audiory-beat-store",
+      projectId:
+      "audiory-beat-store",
 
-      storageBucket: "audiory-beat-store.firebasestorage.app",
+      storageBucket:
+      "audiory-beat-store.firebasestorage.app",
 
-      messagingSenderId: "688272560511",
+      messagingSenderId:
+      "688272560511",
 
-      appId: "1:688272560511:web:9031e6ce215d6f08764a4a"
+      appId:
+      "1:688272560511:web:9031e6ce215d6f08764a4a"
 
     };
 
 
+    // =====================================
     // INIT
+    // =====================================
 
-    const app = initializeApp(firebaseConfig);
+    const app =
+      initializeApp(firebaseConfig);
 
-    const db = getFirestore(app);
+    const db =
+      getFirestore(app);
 
-    const auth = getAuth(app);
+    const auth =
+      getAuth(app);
 
-    const storage = getStorage(app);
+    const storage =
+      getStorage(app);
 
     let currentUser = null;
 
     let editingPostId = null;
 
 
+
+    // =====================================
     // LOGIN
+    // =====================================
 
-    async function login() {
+    async function login(){
 
-      const email = document.getElementById("email").value;
+      const email =
+        document.getElementById("email").value;
 
-      const password = document.getElementById("password").value;
+      const password =
+        document.getElementById("password").value;
 
-      try {
+
+      try{
 
         await signInWithEmailAndPassword(
           auth,
@@ -89,7 +144,9 @@
           password
         );
 
-      } catch (error) {
+      }
+
+      catch(error){
 
         alert(error.message);
 
@@ -100,25 +157,50 @@
     window.login = login;
 
 
+
+    // =====================================
+    // LOGOUT
+    // =====================================
+
+    async function logout(){
+
+      await signOut(auth);
+
+    }
+
+    window.logout = logout;
+
+
+
+    // =====================================
     // AUTH CHECK
+    // =====================================
 
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, async(user)=>{
 
-      if (!user) {
+      if(!user){
 
-        document.getElementById("loginBox").style.display = "flex";
+        document.getElementById(
+          "loginBox"
+        ).style.display = "flex";
 
-        document.getElementById("dashboard").style.display = "none";
+        document.getElementById(
+          "dashboard"
+        ).style.display = "none";
 
         return;
 
       }
 
-      const userRef = doc(db, "users", user.uid);
 
-      const userSnap = await getDoc(userRef);
+      const userRef =
+        doc(db, "users", user.uid);
 
-      if (!userSnap.exists()) {
+      const userSnap =
+        await getDoc(userRef);
+
+
+      if(!userSnap.exists()){
 
         alert("User document not found.");
 
@@ -128,9 +210,12 @@
 
       }
 
-      const userData = userSnap.data();
 
-      if (!userData.isAdmin) {
+      const userData =
+        userSnap.data();
+
+
+      if(!userData.isAdmin){
 
         alert("You are not admin.");
 
@@ -140,42 +225,78 @@
 
       }
 
+
       currentUser = user;
 
-      document.getElementById("loginBox").style.display = "none";
+      document.getElementById(
+        "loginBox"
+      ).style.display = "none";
 
-      document.getElementById("dashboard").style.display = "block";
+      document.getElementById(
+        "dashboard"
+      ).style.display = "block";
 
       loadPosts();
 
     });
 
 
-    // LOAD POSTS
 
-    async function loadPosts() {
+    // =====================================
+    // LOAD POSTS
+    // =====================================
+
+    async function loadPosts(){
 
       const postsContainer =
-        document.getElementById("postsContainer");
+        document.getElementById(
+          "postsContainer"
+        );
 
-      postsContainer.innerHTML = "Loading posts...";
+      postsContainer.innerHTML =
+        "Loading posts...";
+
 
       const q = query(
         collection(db, "blogPosts"),
         orderBy("createdAt", "desc")
       );
 
-      const snapshot = await getDocs(q);
+      const snapshot =
+        await getDocs(q);
 
       postsContainer.innerHTML = "";
 
-      snapshot.forEach((docSnap) => {
 
-        const post = docSnap.data();
+      snapshot.forEach((docSnap)=>{
 
-        const div = document.createElement("div");
+        const post =
+          docSnap.data();
 
-        div.className = "postCard";
+        const created =
+          post.createdAt?.toDate
+          ? post.createdAt.toDate()
+          : null;
+
+        const formattedDate =
+          created
+          ? created.toLocaleDateString(
+              "en-US",
+              {
+                year:"numeric",
+                month:"long",
+                day:"numeric"
+              }
+            )
+          : "";
+
+
+        const div =
+          document.createElement("div");
+
+        div.className =
+          "postCard";
+
 
         div.innerHTML = `
 
@@ -186,27 +307,67 @@
 
           <div class="postInfo">
 
-            <h3>${post.title}</h3>
+            <div class="postTop">
 
-            <p>${post.excerpt || ''}</p>
+              <span class="categoryBadge">
 
-            <small>
-              By ${post.authorName || 'Unknown'}
-            </small>
+                ${post.category || 'Article'}
 
-            <br/>
+              </span>
 
-            <small>
-              ${post.createdAt?.toDate
-                ? post.createdAt.toDate().toLocaleString()
-                : ''}
-            </small>
+              ${
+                post.featured
+                ? `<span class="featuredBadge">
+                    Featured
+                  </span>`
+                : ''
+              }
+
+            </div>
+
+
+            <h3>
+
+              ${post.title}
+
+            </h3>
+
+            <p>
+
+              ${post.excerpt || ''}
+
+            </p>
+
+
+            <div class="postMeta">
+
+              <span>
+                ${post.authorName || 'Audiory'}
+              </span>
+
+              <span class="dot"></span>
+
+              <span>
+                ${formattedDate}
+              </span>
+
+              <span class="dot"></span>
+
+              <span>
+                ${post.readTime || '5 min read'}
+              </span>
+
+            </div>
+
 
             <div class="postButtons">
 
-              <button onclick="editPost('${docSnap.id}')">
+              <button
+                onclick="editPost('${docSnap.id}')"
+              >
                 Edit
               </button>
+
 
               <button
                 class="deleteBtn"
@@ -230,16 +391,24 @@
     window.loadPosts = loadPosts;
 
 
-    // DELETE POST
 
-    async function deletePost(id) {
+    // =====================================
+    // DELETE POST
+    // =====================================
+
+    async function deletePost(id){
 
       const confirmDelete =
-        confirm("Delete this post?");
+        confirm(
+          "Delete this post?"
+        );
 
-      if (!confirmDelete) return;
+      if(!confirmDelete) return;
 
-      await deleteDoc(doc(db, "blogPosts", id));
+
+      await deleteDoc(
+        doc(db, "blogPosts", id)
+      );
 
       loadPosts();
 
@@ -248,28 +417,76 @@
     window.deletePost = deletePost;
 
 
-    // EDIT POST
 
-    async function editPost(id) {
+    // =====================================
+    // EDIT POST
+    // =====================================
+
+    async function editPost(id){
 
       editingPostId = id;
 
-      const snap = await getDoc(doc(db, "blogPosts", id));
+      const snap =
+        await getDoc(
+          doc(db, "blogPosts", id)
+        );
 
-      const data = snap.data();
+      const data =
+        snap.data();
 
-      document.getElementById("title").value =
+
+      document.getElementById(
+        "title"
+      ).value =
         data.title || "";
 
-      document.getElementById("excerpt").value =
+      document.getElementById(
+        "excerpt"
+      ).value =
         data.excerpt || "";
 
-      document.getElementById("content").value =
+      document.getElementById(
+        "content"
+      ).value =
         data.content || "";
 
+      document.getElementById(
+        "category"
+      ).value =
+        data.category || "producer-tips";
+
+      document.getElementById(
+        "authorName"
+      ).value =
+        data.authorName || "";
+
+      document.getElementById(
+        "seoTitle"
+      ).value =
+        data.seoTitle || "";
+
+      document.getElementById(
+        "seoDescription"
+      ).value =
+        data.seoDescription || "";
+
+      document.getElementById(
+        "readTime"
+      ).value =
+        data.readTime || "";
+
+      document.getElementById(
+        "featured"
+      ).checked =
+        data.featured || false;
+
+
       window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+
+        top:0,
+
+        behavior:"smooth"
+
       });
 
     }
@@ -277,9 +494,12 @@
     window.editPost = editPost;
 
 
-    // PUBLISH OR UPDATE
 
-    async function publishPost() {
+    // =====================================
+    // PUBLISH / UPDATE
+    // =====================================
+
+    async function publishPost(){
 
       const title =
         document.getElementById("title").value;
@@ -290,20 +510,42 @@
       const content =
         document.getElementById("content").value;
 
+      const category =
+        document.getElementById("category").value;
+
+      const authorName =
+        document.getElementById("authorName").value;
+
+      const seoTitle =
+        document.getElementById("seoTitle").value;
+
+      const seoDescription =
+        document.getElementById("seoDescription").value;
+
+      const readTime =
+        document.getElementById("readTime").value;
+
+      const featured =
+        document.getElementById("featured").checked;
+
       const thumbnailFile =
         document.getElementById("thumbnail").files[0];
 
 
-      if (!title || !content) {
+      if(!title || !content){
 
-        alert("Fill all required fields.");
+        alert(
+          "Fill all required fields."
+        );
 
         return;
 
       }
 
+
       const slug = title
         .toLowerCase()
+        .trim()
         .replace(/[^a-z0-9]+/g, "-");
 
 
@@ -312,122 +554,306 @@
 
       // IMAGE UPLOAD
 
-      if (thumbnailFile) {
+      if(thumbnailFile){
 
         const imageRef = ref(
           storage,
           `blog-thumbnails/${Date.now()}-${thumbnailFile.name}`
         );
 
-        await uploadBytes(imageRef, thumbnailFile);
+        await uploadBytes(
+          imageRef,
+          thumbnailFile
+        );
 
         thumbnailURL =
-          await getDownloadURL(imageRef);
+          await getDownloadURL(
+            imageRef
+          );
 
       }
 
 
-      // UPDATE EXISTING
+      const postData = {
 
-      if (editingPostId) {
+        title,
+        excerpt,
+        content,
 
-        const updateData = {
+        category,
+        slug,
 
-          title,
-          excerpt,
-          content,
-          slug
+        seoTitle,
+        seoDescription,
 
-        };
+        readTime,
 
-        if (thumbnailURL) {
+        featured,
 
-          updateData.thumbnailURL = thumbnailURL;
+        authorName:
+          authorName || "Audiory",
 
-        }
+        authorId:
+          currentUser.uid,
+
+        published:true
+
+      };
+
+
+      if(thumbnailURL){
+
+        postData.thumbnailURL =
+          thumbnailURL;
+
+      }
+
+
+
+      // UPDATE
+
+      if(editingPostId){
 
         await updateDoc(
-          doc(db, "blogPosts", editingPostId),
-          updateData
+
+          doc(
+            db,
+            "blogPosts",
+            editingPostId
+          ),
+
+          postData
+
         );
 
         alert("Post updated!");
 
         editingPostId = null;
 
-      } else {
+      }
 
-        // CREATE NEW
 
-        await addDoc(collection(db, "blogPosts"), {
+      // CREATE
 
-          title,
-          excerpt,
-          content,
-          slug,
-          thumbnailURL,
+      else{
 
-          authorName: currentUser.email,
+        postData.createdAt =
+          serverTimestamp();
 
-          authorId: currentUser.uid,
+        await addDoc(
 
-          createdAt: serverTimestamp(),
+          collection(
+            db,
+            "blogPosts"
+          ),
 
-          published: true
+          postData
 
-        });
+        );
 
         alert("Post published!");
 
       }
 
 
+
       // CLEAR FORM
 
-      document.getElementById("title").value = "";
+      document.getElementById(
+        "title"
+      ).value = "";
 
-      document.getElementById("excerpt").value = "";
+      document.getElementById(
+        "excerpt"
+      ).value = "";
 
-      document.getElementById("content").value = "";
+      document.getElementById(
+        "content"
+      ).value = "";
 
-      document.getElementById("thumbnail").value = "";
+      document.getElementById(
+        "thumbnail"
+      ).value = "";
+
+      document.getElementById(
+        "authorName"
+      ).value = "";
+
+      document.getElementById(
+        "seoTitle"
+      ).value = "";
+
+      document.getElementById(
+        "seoDescription"
+      ).value = "";
+
+      document.getElementById(
+        "readTime"
+      ).value = "";
+
+      document.getElementById(
+        "featured"
+      ).checked = false;
+
+
+      editingPostId = null;
 
       loadPosts();
 
     }
 
-    window.publishPost = publishPost;
+    window.publishPost =
+      publishPost;
 
   </script>
+
+
 
 
   <style>
 
     *{
+      margin:0;
+      padding:0;
       box-sizing:border-box;
     }
 
     body{
 
-      margin:0;
-
-      background:#050816;
+      background:
+      radial-gradient(
+        circle at top,
+        rgba(124,58,237,.2),
+        transparent 30%
+      ),
+      #050816;
 
       color:white;
 
-      font-family:Arial;
+      font-family:
+      "Inter",
+      sans-serif;
+
+    }
+
+
+    input,
+    textarea,
+    select{
+
+      width:100%;
+
+      background:#111827;
+
+      border:
+      1px solid #1f2937;
+
+      color:white;
+
+      padding:15px;
+
+      border-radius:14px;
+
+      margin-bottom:16px;
+
+      font-size:15px;
+
+    }
+
+    textarea{
+
+      min-height:260px;
+
+      resize:vertical;
+
+    }
+
+    button{
+
+      border:none;
+
+      padding:13px 18px;
+
+      border-radius:14px;
+
+      cursor:pointer;
+
+      font-weight:700;
+
+      transition:.2s;
+
+    }
+
+    button:hover{
+
+      transform:
+      translateY(-2px);
+
+    }
+
+
+    /* LOGIN */
+
+    #loginBox{
+
+      display:flex;
+
+      flex-direction:column;
+
+      gap:14px;
+
+      max-width:420px;
+
+      margin:120px auto;
+
+      background:
+      rgba(15,23,42,.8);
+
+      border:
+      1px solid rgba(255,255,255,.06);
+
+      padding:34px;
+
+      border-radius:30px;
+
+    }
+
+    #loginBox h1{
+
+      font-size:38px;
+
+      margin-bottom:10px;
+
+    }
+
+    #loginBox button{
+
+      background:#8b5cf6;
+
+      color:white;
+
+    }
+
+
+
+    /* DASHBOARD */
+
+    #dashboard{
+
+      display:none;
 
     }
 
     .container{
 
-      max-width:1200px;
+      max-width:1400px;
 
       margin:auto;
 
-      padding:20px;
+      padding:30px 24px;
 
     }
+
 
     .topBar{
 
@@ -439,90 +865,38 @@
 
       margin-bottom:30px;
 
-      padding-bottom:20px;
+      padding-bottom:24px;
 
-      border-bottom:1px solid #1f2937;
-
-    }
-
-    h1{
-
-      margin:0;
-
-      font-size:32px;
+      border-bottom:
+      1px solid rgba(255,255,255,.06);
 
     }
 
-    .grid{
+    .topBar h1{
 
-      display:grid;
+      font-size:40px;
 
-      grid-template-columns:1fr 1fr;
-
-      gap:20px;
+      letter-spacing:-2px;
 
     }
 
-    .panel{
+    .topButtons{
 
-      background:#0f172a;
+      display:flex;
 
-      border:1px solid #1e293b;
-
-      border-radius:20px;
-
-      padding:20px;
+      gap:12px;
 
     }
 
-    input,
-    textarea{
-
-      width:100%;
-
-      margin-bottom:15px;
-
-      padding:14px;
-
-      border:none;
-
-      border-radius:12px;
-
-      background:#111827;
-
-      color:white;
-
-      font-size:15px;
-
-    }
-
-    textarea{
-
-      min-height:250px;
-
-      resize:vertical;
-
-    }
-
-    button{
+    .refreshBtn{
 
       background:white;
 
       color:black;
 
-      border:none;
-
-      padding:12px 18px;
-
-      border-radius:12px;
-
-      font-weight:bold;
-
-      cursor:pointer;
-
     }
 
-    .deleteBtn{
+    .logoutBtn{
 
       background:#ef4444;
 
@@ -530,31 +904,120 @@
 
     }
 
+
+    .grid{
+
+      display:grid;
+
+      grid-template-columns:
+      1fr 1fr;
+
+      gap:26px;
+
+    }
+
+
+    .panel{
+
+      background:
+      rgba(15,23,42,.8);
+
+      border:
+      1px solid rgba(255,255,255,.06);
+
+      border-radius:28px;
+
+      padding:28px;
+
+      backdrop-filter:blur(10px);
+
+    }
+
+    .panel h2{
+
+      margin-bottom:22px;
+
+      font-size:28px;
+
+    }
+
+
+    .publishBtn{
+
+      width:100%;
+
+      background:#8b5cf6;
+
+      color:white;
+
+      font-size:15px;
+
+    }
+
+
+    .featuredToggle{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:12px;
+
+      margin-bottom:20px;
+
+      color:#cbd5e1;
+
+    }
+
+    .featuredToggle input{
+
+      width:auto;
+
+      margin:0;
+
+    }
+
+
+
+    /* POSTS */
+
     .postCard{
 
       display:flex;
 
-      gap:15px;
+      gap:18px;
 
       background:#111827;
 
-      border-radius:16px;
+      border:
+      1px solid #1f2937;
 
-      padding:15px;
+      border-radius:22px;
 
-      margin-bottom:15px;
+      overflow:hidden;
+
+      margin-bottom:18px;
+
+      transition:.2s;
+
+    }
+
+    .postCard:hover{
+
+      border-color:#8b5cf6;
+
+      transform:
+      translateY(-3px);
 
     }
 
     .postThumb{
 
-      width:120px;
+      width:170px;
 
-      height:120px;
+      height:170px;
 
       object-fit:cover;
-
-      border-radius:12px;
 
       background:#1f2937;
 
@@ -562,7 +1025,106 @@
 
     .postInfo{
 
+      padding:18px;
+
       flex:1;
+
+    }
+
+    .postTop{
+
+      display:flex;
+
+      gap:10px;
+
+      margin-bottom:16px;
+
+      flex-wrap:wrap;
+
+    }
+
+    .categoryBadge{
+
+      padding:8px 12px;
+
+      border-radius:999px;
+
+      background:
+      rgba(139,92,246,.15);
+
+      color:#c4b5fd;
+
+      font-size:12px;
+
+      font-weight:700;
+
+      text-transform:capitalize;
+
+    }
+
+    .featuredBadge{
+
+      padding:8px 12px;
+
+      border-radius:999px;
+
+      background:
+      rgba(251,191,36,.15);
+
+      color:#fcd34d;
+
+      font-size:12px;
+
+      font-weight:700;
+
+    }
+
+    .postInfo h3{
+
+      font-size:26px;
+
+      line-height:1.2;
+
+      margin-bottom:14px;
+
+    }
+
+    .postInfo p{
+
+      color:#94a3b8;
+
+      line-height:1.7;
+
+      margin-bottom:18px;
+
+    }
+
+    .postMeta{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:10px;
+
+      flex-wrap:wrap;
+
+      color:#94a3b8;
+
+      font-size:13px;
+
+      margin-bottom:20px;
+
+    }
+
+    .dot{
+
+      width:5px;
+      height:5px;
+
+      border-radius:999px;
+
+      background:#64748b;
 
     }
 
@@ -570,39 +1132,69 @@
 
       display:flex;
 
-      gap:10px;
-
-      margin-top:15px;
-
-    }
-
-    #loginBox{
-
-      display:flex;
-
-      flex-direction:column;
-
-      max-width:400px;
-
-      margin:100px auto;
-
       gap:12px;
 
-      padding:20px;
+    }
+
+    .postButtons button{
+
+      background:white;
+
+      color:black;
 
     }
 
-    #dashboard{
+    .deleteBtn{
 
-      display:none;
+      background:#ef4444 !important;
+
+      color:white !important;
 
     }
 
-    @media(max-width:900px){
+
+
+    /* FOOTER */
+
+    footer{
+
+      margin-top:80px;
+
+      border-top:
+      1px solid rgba(255,255,255,.06);
+
+      padding:40px 20px;
+
+      text-align:center;
+
+      color:#94a3b8;
+
+    }
+
+
+
+    /* MOBILE */
+
+    @media(max-width:1000px){
 
       .grid{
 
         grid-template-columns:1fr;
+
+      }
+
+    }
+
+
+    @media(max-width:700px){
+
+      .topBar{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:18px;
 
       }
 
@@ -616,7 +1208,13 @@
 
         width:100%;
 
-        height:220px;
+        height:240px;
+
+      }
+
+      .topBar h1{
+
+        font-size:32px;
 
       }
 
@@ -628,11 +1226,14 @@
 <body>
 
 
+
   <!-- LOGIN -->
 
   <div id="loginBox">
 
-    <h1>Admin Login</h1>
+    <h1>
+      Audiory Blog CMS
+    </h1>
 
     <input
       id="email"
@@ -654,40 +1255,125 @@
 
 
 
+
+
   <!-- DASHBOARD -->
 
   <div id="dashboard">
 
     <div class="container">
 
+
+      <!-- TOP -->
+
       <div class="topBar">
 
-        <h1>Audiory Blog Dashboard</h1>
+        <h1>
+          Audiory Blog Dashboard
+        </h1>
 
-        <button onclick="location.reload()">
-          Refresh
-        </button>
+
+        <div class="topButtons">
+
+          <button
+            class="refreshBtn"
+            onclick="location.reload()"
+          >
+            Refresh
+          </button>
+
+          <button
+            class="logoutBtn"
+            onclick="logout()"
+          >
+            Logout
+          </button>
+
+        </div>
 
       </div>
 
 
+
+
+      <!-- GRID -->
+
       <div class="grid">
 
-        <!-- CREATE -->
+
+        <!-- FORM -->
 
         <div class="panel">
 
-          <h2>Create / Edit Post</h2>
+          <h2>
+            Create / Edit Article
+          </h2>
+
 
           <input
             id="title"
             placeholder="Post title"
           />
 
+
           <input
             id="excerpt"
             placeholder="Short excerpt"
           />
+
+
+          <select id="category">
+
+            <option value="producer-tips">
+              Producer Tips
+            </option>
+
+            <option value="marketing">
+              Marketing
+            </option>
+
+            <option value="industry">
+              Industry
+            </option>
+
+          </select>
+
+
+          <input
+            id="authorName"
+            placeholder="Author name"
+          />
+
+
+          <input
+            id="seoTitle"
+            placeholder="SEO title"
+          />
+
+
+          <input
+            id="seoDescription"
+            placeholder="SEO description"
+          />
+
+
+          <input
+            id="readTime"
+            placeholder="Read time (example: 5 min read)"
+          />
+
+
+          <label class="featuredToggle">
+
+            <input
+              type="checkbox"
+              id="featured"
+            />
+
+            Featured article
+
+          </label>
+
 
           <input
             type="file"
@@ -695,23 +1381,33 @@
             accept="image/*"
           />
 
+
           <textarea
             id="content"
             placeholder="Write your article..."
           ></textarea>
 
-          <button onclick="publishPost()">
-            Publish Post
+
+          <button
+            class="publishBtn"
+            onclick="publishPost()"
+          >
+            Publish / Update Article
           </button>
 
         </div>
+
+
+
 
 
         <!-- POSTS -->
 
         <div class="panel">
 
-          <h2>Published Posts</h2>
+          <h2>
+            Published Articles
+          </h2>
 
           <div id="postsContainer">
 
@@ -722,6 +1418,14 @@
       </div>
 
     </div>
+
+
+    <footer>
+
+      © 2026 Audiory Blog CMS.
+      Built for creator publishing.
+
+    </footer>
 
   </div>
 
