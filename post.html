@@ -1,14 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Blog Post</title>
+  <meta charset="UTF-8"/>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>
+    Audiory Article
+  </title>
+
+  <meta
+    name="description"
+    content="Audiory music business and producer insights."
+  />
+
+  <meta
+    property="og:type"
+    content="article"
+  />
+
+  <meta
+    name="theme-color"
+    content="#050816"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  />
+
 
   <script type="module">
 
-    import { initializeApp }
+    import {
+      initializeApp
+    }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
     import {
@@ -16,126 +57,968 @@
       collection,
       getDocs,
       query,
-      where
+      where,
+      limit
     }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
+    // =====================================
+    // FIREBASE
+    // =====================================
+
     const firebaseConfig = {
 
-      apiKey: "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
+      apiKey:
+      "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
 
-      authDomain: "audiory-beat-store.firebaseapp.com",
+      authDomain:
+      "audiory-beat-store.firebaseapp.com",
 
-      projectId: "audiory-beat-store",
+      projectId:
+      "audiory-beat-store",
 
-      storageBucket: "audiory-beat-store.firebasestorage.app",
+      storageBucket:
+      "audiory-beat-store.firebasestorage.app",
 
-      messagingSenderId: "688272560511",
+      messagingSenderId:
+      "688272560511",
 
-      appId: "1:688272560511:web:9031e6ce215d6f08764a4a"
+      appId:
+      "1:688272560511:web:9031e6ce215d6f08764a4a"
 
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app =
+      initializeApp(firebaseConfig);
 
-    const db = getFirestore(app);
+    const db =
+      getFirestore(app);
 
 
-    async function loadPost() {
+
+    // =====================================
+    // MOBILE MENU
+    // =====================================
+
+    window.toggleMenu = function(){
+
+      document
+        .getElementById("mobileMenu")
+        .classList
+        .toggle("showMenu");
+
+    }
+
+
+
+    // =====================================
+    // FORMAT CONTENT
+    // =====================================
+
+    function formatContent(text){
+
+      if(!text) return "";
+
+      return text
+
+      .split("\n")
+
+      .map(line => {
+
+        line = line.trim();
+
+        if(!line) return "";
+
+        if(line.startsWith("## ")){
+
+          return `
+            <h2>
+              ${line.replace("## ","")}
+            </h2>
+          `;
+        }
+
+        if(line.startsWith("- ")){
+
+          return `
+            <li>
+              ${line.replace("- ","")}
+            </li>
+          `;
+        }
+
+        return `
+          <p>
+            ${line}
+          </p>
+        `;
+
+      })
+
+      .join("");
+
+    }
+
+
+
+    // =====================================
+    // LOAD POST
+    // =====================================
+
+    async function loadPost(){
 
       const params =
-        new URLSearchParams(window.location.search);
+        new URLSearchParams(
+          window.location.search
+        );
 
-      const slug = params.get("slug");
+      const slug =
+        params.get("slug");
+
 
       const q = query(
         collection(db, "blogPosts"),
-        where("slug", "==", slug)
+        where("slug", "==", slug),
+        limit(1)
       );
 
-      const snapshot = await getDocs(q);
+      const snapshot =
+        await getDocs(q);
 
-      snapshot.forEach((docSnap) => {
 
-        const post = docSnap.data();
+      if(snapshot.empty){
 
-        document.title = post.title;
+        document.getElementById(
+          "article"
+        ).innerHTML = `
 
-        document.getElementById("title").innerText =
-          post.title;
+          <div class="notFound">
 
-        document.getElementById("image").src =
-          post.thumbnailURL || '';
+            <h1>
+              Article not found
+            </h1>
 
-        document.getElementById("content").innerHTML =
-          post.content;
+            <a href="/">
+              Back to Blog
+            </a>
 
-        document.getElementById("meta").innerText =
-          `By ${post.authorName}`;
+          </div>
 
-      });
+        `;
+
+        return;
+
+      }
+
+
+      const post =
+        snapshot.docs[0].data();
+
+
+      // SEO
+
+      document.title =
+        post.seoTitle || post.title;
+
+      document.querySelector(
+        'meta[name="description"]'
+      ).content =
+        post.seoDescription ||
+        post.excerpt ||
+        "";
+
+
+      // DATE
+
+      const created =
+        post.createdAt?.toDate
+        ? post.createdAt.toDate()
+        : null;
+
+      const formattedDate =
+        created
+        ? created.toLocaleDateString(
+            "en-US",
+            {
+              year:"numeric",
+              month:"long",
+              day:"numeric"
+            }
+          )
+        : "Audiory";
+
+
+      // CONTENT
+
+      document.getElementById(
+        "title"
+      ).innerText =
+        post.title;
+
+      document.getElementById(
+        "image"
+      ).src =
+        post.thumbnailURL || "";
+
+      document.getElementById(
+        "content"
+      ).innerHTML =
+        formatContent(post.content);
+
+      document.getElementById(
+        "author"
+      ).innerText =
+        post.authorName || "Audiory";
+
+      document.getElementById(
+        "date"
+      ).innerText =
+        formattedDate;
+
+      document.getElementById(
+        "category"
+      ).innerText =
+        post.category || "Article";
+
+      document.getElementById(
+        "readTime"
+      ).innerText =
+        post.readTime || "5 min read";
+
+
+      loadRelated(
+        post.category,
+        slug
+      );
 
     }
 
     loadPost();
 
+
+
+    // =====================================
+    // RELATED POSTS
+    // =====================================
+
+    async function loadRelated(
+      category,
+      currentSlug
+    ){
+
+      const container =
+        document.getElementById(
+          "relatedPosts"
+        );
+
+      const q = query(
+        collection(db, "blogPosts"),
+        where(
+          "category",
+          "==",
+          category
+        )
+      );
+
+      const snapshot =
+        await getDocs(q);
+
+      container.innerHTML = "";
+
+
+      snapshot.forEach((docSnap) => {
+
+        const post =
+          docSnap.data();
+
+        if(post.slug === currentSlug){
+          return;
+        }
+
+        const card =
+          document.createElement("a");
+
+        card.href =
+          `/post.html?slug=${post.slug}`;
+
+        card.className =
+          "relatedCard";
+
+        card.innerHTML = `
+
+          <img
+            src="${post.thumbnailURL || ''}"
+          />
+
+          <div class="relatedContent">
+
+            <div class="relatedCategory">
+
+              ${post.category || 'Article'}
+
+            </div>
+
+            <h3>
+
+              ${post.title}
+
+            </h3>
+
+            <p>
+
+              ${post.excerpt || ''}
+
+            </p>
+
+          </div>
+
+        `;
+
+        container.appendChild(card);
+
+      });
+
+    }
+
   </script>
+
+
 
   <style>
 
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
     body{
 
-      margin:0;
-
-      background:#050816;
+      background:
+      radial-gradient(
+        circle at top,
+        rgba(124,58,237,.18),
+        transparent 30%
+      ),
+      #050816;
 
       color:white;
 
-      font-family:Arial;
+      font-family:
+      "Inter",
+      sans-serif;
+
+      overflow-x:hidden;
 
     }
 
-    .container{
+    a{
+      text-decoration:none;
+      color:inherit;
+    }
 
-      max-width:900px;
+
+
+    /* =========================
+       NAVBAR
+    ========================== */
+
+    .navbar{
+
+      position:sticky;
+
+      top:0;
+
+      z-index:999;
+
+      backdrop-filter:blur(18px);
+
+      background:
+      rgba(5,8,22,.7);
+
+      border-bottom:
+      1px solid rgba(255,255,255,.05);
+
+    }
+
+    .navInner{
+
+      max-width:1300px;
 
       margin:auto;
 
-      padding:40px 20px;
+      padding:20px 24px;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:space-between;
 
     }
 
-    img{
+    .logo{
 
-      width:100%;
+      font-size:30px;
 
-      border-radius:20px;
+      font-weight:900;
 
-      margin:20px 0;
+      letter-spacing:-1px;
+
+    }
+
+    .logo span{
+      color:#8b5cf6;
+    }
+
+    .navLinks{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:28px;
+
+    }
+
+    .navLinks a{
+
+      color:#94a3b8;
+
+      transition:.2s;
+
+      font-size:15px;
+
+    }
+
+    .navLinks a:hover{
+      color:white;
+    }
+
+    .mainBtn{
+
+      background:#8b5cf6;
+
+      color:white !important;
+
+      padding:12px 18px;
+
+      border-radius:14px;
+
+      font-weight:700;
+
+    }
+
+
+
+    /* =========================
+       MOBILE MENU
+    ========================== */
+
+    .menuBtn{
+
+      display:none;
+
+      width:48px;
+      height:48px;
+
+      border:none;
+
+      border-radius:14px;
+
+      background:
+      rgba(255,255,255,.06);
+
+      color:white;
+
+      font-size:24px;
+
+      cursor:pointer;
+
+    }
+
+    .mobileMenu{
+
+      display:none;
+
+      flex-direction:column;
+
+      padding:20px 24px;
+
+      gap:18px;
+
+      border-top:
+      1px solid rgba(255,255,255,.06);
+
+      background:#0b1020;
+
+    }
+
+    .mobileMenu a{
+
+      color:#d1d5db;
+
+      font-size:15px;
+
+    }
+
+    .showMenu{
+      display:flex;
+    }
+
+
+
+    /* =========================
+       ARTICLE
+    ========================== */
+
+    .articleWrap{
+
+      max-width:950px;
+
+      margin:auto;
+
+      padding:
+      80px 24px 100px;
+
+    }
+
+    .category{
+
+      display:inline-flex;
+
+      padding:10px 16px;
+
+      border-radius:999px;
+
+      background:
+      rgba(139,92,246,.15);
+
+      color:#c4b5fd;
+
+      font-size:14px;
+
+      font-weight:700;
+
+      text-transform:capitalize;
+
+      margin-bottom:28px;
 
     }
 
     h1{
 
-      font-size:48px;
+      font-size:64px;
+
+      line-height:1;
+
+      letter-spacing:-3px;
+
+      margin-bottom:28px;
 
     }
 
+    .meta{
+
+      display:flex;
+
+      flex-wrap:wrap;
+
+      gap:14px;
+
+      color:#94a3b8;
+
+      margin-bottom:36px;
+
+      font-size:15px;
+
+    }
+
+    .dot{
+
+      width:5px;
+      height:5px;
+
+      border-radius:999px;
+
+      background:#64748b;
+
+      margin-top:8px;
+
+    }
+
+    .heroImage{
+
+      width:100%;
+
+      border-radius:34px;
+
+      margin-bottom:50px;
+
+      border:
+      1px solid rgba(255,255,255,.06);
+
+    }
+
+
+
+    /* =========================
+       CONTENT
+    ========================== */
+
     #content{
-
-      line-height:1.8;
-
-      font-size:18px;
 
       color:#d1d5db;
 
     }
 
-    #meta{
+    #content p{
 
-      color:#9ca3af;
+      font-size:20px;
+
+      line-height:2;
+
+      margin-bottom:28px;
+
+      color:#d1d5db;
+
+    }
+
+    #content h2{
+
+      font-size:38px;
+
+      line-height:1.2;
+
+      margin-top:60px;
+
+      margin-bottom:24px;
+
+      letter-spacing:-1px;
+
+      color:white;
+
+    }
+
+    #content li{
+
+      margin-left:24px;
+
+      margin-bottom:14px;
+
+      line-height:1.8;
+
+      color:#d1d5db;
+
+      font-size:18px;
+
+    }
+
+
+
+    /* =========================
+       RELATED
+    ========================== */
+
+    .relatedSection{
+
+      margin-top:100px;
+
+    }
+
+    .relatedSection h2{
+
+      font-size:42px;
+
+      margin-bottom:30px;
+
+      letter-spacing:-2px;
+
+    }
+
+    .relatedGrid{
+
+      display:grid;
+
+      grid-template-columns:
+      repeat(
+        auto-fit,
+        minmax(280px,1fr)
+      );
+
+      gap:24px;
+
+    }
+
+    .relatedCard{
+
+      background:
+      rgba(15,23,42,.8);
+
+      border:
+      1px solid rgba(255,255,255,.06);
+
+      border-radius:24px;
+
+      overflow:hidden;
+
+      transition:.25s;
+
+    }
+
+    .relatedCard:hover{
+
+      transform:
+      translateY(-5px);
+
+      border-color:
+      rgba(139,92,246,.35);
+
+    }
+
+    .relatedCard img{
+
+      width:100%;
+      height:200px;
+
+      object-fit:cover;
+
+    }
+
+    .relatedContent{
+
+      padding:22px;
+
+    }
+
+    .relatedCategory{
+
+      color:#c4b5fd;
+
+      font-size:13px;
+
+      font-weight:700;
+
+      text-transform:capitalize;
+
+      margin-bottom:12px;
+
+    }
+
+    .relatedContent h3{
+
+      font-size:24px;
+
+      line-height:1.2;
+
+      margin-bottom:14px;
+
+    }
+
+    .relatedContent p{
+
+      color:#94a3b8;
+
+      line-height:1.7;
+
+      font-size:15px;
+
+    }
+
+
+
+    /* =========================
+       FOOTER
+    ========================== */
+
+    footer{
+
+      border-top:
+      1px solid rgba(255,255,255,.06);
+
+      padding:80px 24px;
+
+      background:
+      rgba(255,255,255,.02);
+
+    }
+
+    .footerInner{
+
+      max-width:1300px;
+
+      margin:auto;
+
+      display:flex;
+
+      justify-content:space-between;
+
+      gap:50px;
+
+      flex-wrap:wrap;
+
+    }
+
+    .footerBrand{
+
+      max-width:450px;
+
+    }
+
+    .footerBrand h3{
+
+      font-size:30px;
+
+      margin-bottom:18px;
+
+    }
+
+    .footerBrand p{
+
+      color:#94a3b8;
+
+      line-height:1.9;
+
+    }
+
+    .footerLinks{
+
+      display:flex;
+
+      gap:80px;
+
+      flex-wrap:wrap;
+
+    }
+
+    .footerColumn{
+
+      display:flex;
+
+      flex-direction:column;
+
+      gap:16px;
+
+    }
+
+    .footerColumn h4{
+
+      margin-bottom:4px;
+
+    }
+
+    .footerColumn a{
+
+      color:#94a3b8;
+
+    }
+
+    .copyright{
+
+      margin-top:70px;
+
+      text-align:center;
+
+      color:#64748b;
+
+      font-size:14px;
+
+    }
+
+
+
+    /* =========================
+       NOT FOUND
+    ========================== */
+
+    .notFound{
+
+      text-align:center;
+
+      padding:120px 20px;
+
+    }
+
+    .notFound h1{
+
+      font-size:52px;
 
       margin-bottom:20px;
+
+    }
+
+
+
+    /* =========================
+       MOBILE
+    ========================== */
+
+    @media(max-width:900px){
+
+      h1{
+
+        font-size:48px;
+
+      }
+
+      #content p{
+
+        font-size:18px;
+
+      }
+
+      #content h2{
+
+        font-size:32px;
+
+      }
+
+    }
+
+    @media(max-width:700px){
+
+      .navLinks{
+        display:none;
+      }
+
+      .menuBtn{
+        display:block;
+      }
+
+      .articleWrap{
+
+        padding-top:50px;
+
+      }
+
+      h1{
+
+        font-size:40px;
+
+        line-height:1.05;
+
+      }
+
+      #content p{
+
+        font-size:17px;
+
+        line-height:1.9;
+
+      }
+
+      #content h2{
+
+        font-size:28px;
+
+      }
+
+      .relatedSection h2{
+
+        font-size:34px;
+
+      }
 
     }
 
@@ -144,17 +1027,247 @@
 </head>
 <body>
 
-  <div class="container">
 
-    <h1 id="title"></h1>
 
-    <div id="meta"></div>
+  <!-- NAVBAR -->
 
-    <img id="image"/>
+  <nav class="navbar">
 
-    <div id="content"></div>
+    <div class="navInner">
 
-  </div>
+      <a href="/" class="logo">
+
+        Audio<span>ry</span>
+
+      </a>
+
+
+      <div class="navLinks">
+
+        <a href="/">
+          Home
+        </a>
+
+        <a href="/producer-tips/">
+          Producer Tips
+        </a>
+
+        <a href="/marketing/">
+          Marketing
+        </a>
+
+        <a href="/industry/">
+          Industry
+        </a>
+
+        <a
+          href="https://audiory.site"
+          class="mainBtn"
+        >
+          Main Website
+        </a>
+
+      </div>
+
+
+      <button
+        class="menuBtn"
+        onclick="toggleMenu()"
+      >
+        ☰
+      </button>
+
+    </div>
+
+
+    <!-- MOBILE MENU -->
+
+    <div
+      class="mobileMenu"
+      id="mobileMenu"
+    >
+
+      <a href="/">
+        Home
+      </a>
+
+      <a href="/producer-tips/">
+        Producer Tips
+      </a>
+
+      <a href="/marketing/">
+        Marketing
+      </a>
+
+      <a href="/industry/">
+        Industry
+      </a>
+
+      <a href="https://audiory.site">
+        Main Website
+      </a>
+
+    </div>
+
+  </nav>
+
+
+
+
+
+  <!-- ARTICLE -->
+
+  <main
+    class="articleWrap"
+    id="article"
+  >
+
+    <div
+      class="category"
+      id="category"
+    >
+      Article
+    </div>
+
+
+    <h1 id="title">
+
+    </h1>
+
+
+    <div class="meta">
+
+      <span id="author">
+
+      </span>
+
+      <div class="dot"></div>
+
+      <span id="date">
+
+      </span>
+
+      <div class="dot"></div>
+
+      <span id="readTime">
+
+      </span>
+
+    </div>
+
+
+    <img
+      id="image"
+      class="heroImage"
+    />
+
+
+    <div id="content">
+
+    </div>
+
+
+
+    <!-- RELATED -->
+
+    <section class="relatedSection">
+
+      <h2>
+        Related Articles
+      </h2>
+
+      <div
+        class="relatedGrid"
+        id="relatedPosts"
+      >
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="footerInner">
+
+      <div class="footerBrand">
+
+        <h3>
+          Audiory
+        </h3>
+
+        <p>
+
+          Audiory powers the next
+          generation of producers,
+          artists and creators through
+          creator tools, beat commerce
+          and music infrastructure.
+
+        </p>
+
+      </div>
+
+
+      <div class="footerLinks">
+
+        <div class="footerColumn">
+
+          <h4>
+            Categories
+          </h4>
+
+          <a href="/producer-tips/">
+            Producer Tips
+          </a>
+
+          <a href="/marketing/">
+            Marketing
+          </a>
+
+          <a href="/industry/">
+            Industry
+          </a>
+
+        </div>
+
+
+        <div class="footerColumn">
+
+          <h4>
+            Platform
+          </h4>
+
+          <a href="https://audiory.site">
+            Main Website
+          </a>
+
+          <a href="/">
+            Blog Home
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="copyright">
+
+      © 2026 Audiory.
+      All rights reserved.
+
+    </div>
+
+  </footer>
 
 </body>
 </html>
