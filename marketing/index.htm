@@ -109,6 +109,9 @@
     const db =
       getFirestore(app);
 
+    const currentCategory =
+      "marketing";
+
 
     // ======================================
     // LOAD POSTS
@@ -163,6 +166,13 @@
 
 
         snapshot.forEach((docSnap) => {
+
+          if(
+            docSnap.data().category !==
+            currentCategory
+          ){
+            return;
+          }
 
           const post =
             docSnap.data();
@@ -1190,8 +1200,8 @@
 
       <h1>
 
-        Insights for modern
-        producers & creators.
+        Music marketing &
+        audience growth.
 
       </h1>
 
