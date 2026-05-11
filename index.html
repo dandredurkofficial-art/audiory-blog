@@ -3,13 +3,43 @@
 <head>
 
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
-  <title>Audiory Blog</title>
+  <title>
+    Audiory Blog
+  </title>
 
   <meta
     name="description"
     content="Producer marketing, beat selling, music business and creator insights from Audiory."
+  />
+
+  <meta
+    property="og:type"
+    content="website"
+  />
+
+  <meta
+    property="og:title"
+    content="Audiory Blog"
+  />
+
+  <meta
+    property="og:description"
+    content="Producer marketing, beat selling and music business insights."
+  />
+
+  <meta
+    name="twitter:card"
+    content="summary_large_image"
+  />
+
+  <meta
+    name="theme-color"
+    content="#050816"
   />
 
   <link
@@ -29,12 +59,12 @@
   />
 
 
-
   <script type="module">
 
     import {
       initializeApp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
     import {
       getFirestore,
@@ -42,107 +72,49 @@
       getDocs,
       query,
       orderBy
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
-    // =========================================
+    // ======================================
     // FIREBASE
-    // =========================================
+    // ======================================
 
     const firebaseConfig = {
 
-      apiKey: "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
+      apiKey:
+      "AIzaSyCmsFTjDryYOTddWfScTKsnrs0cWAHnpdc",
 
-      authDomain: "audiory-beat-store.firebaseapp.com",
+      authDomain:
+      "audiory-beat-store.firebaseapp.com",
 
-      projectId: "audiory-beat-store",
+      projectId:
+      "audiory-beat-store",
 
-      storageBucket: "audiory-beat-store.firebasestorage.app",
+      storageBucket:
+      "audiory-beat-store.firebasestorage.app",
 
-      messagingSenderId: "688272560511",
+      messagingSenderId:
+      "688272560511",
 
-      appId: "1:688272560511:web:9031e6ce215d6f08764a4a"
-
-    };
-
-    const app = initializeApp(firebaseConfig);
-
-    const db = getFirestore(app);
-
-
-    // =========================================
-    // CATEGORY
-    // =========================================
-
-    const params =
-      new URLSearchParams(window.location.search);
-
-    const category =
-      params.get("category");
-
-
-    // =========================================
-    // CATEGORY TITLES
-    // =========================================
-
-    const categoryMap = {
-
-      "producer-tips":
-      {
-        title: "Producer Tips",
-        desc:
-        "Beat making workflows, creativity systems and producer growth strategies."
-      },
-
-      "marketing":
-      {
-        title: "Marketing",
-        desc:
-        "Audience growth, music promotion and producer branding systems."
-      },
-
-      "industry":
-      {
-        title: "Industry",
-        desc:
-        "Music business insights, trends and creator economy updates."
-      }
+      appId:
+      "1:688272560511:web:9031e6ce215d6f08764a4a"
 
     };
 
 
-    // =========================================
-    // UPDATE HERO
-    // =========================================
+    const app =
+      initializeApp(firebaseConfig);
 
-    if (category && categoryMap[category]) {
-
-      document.addEventListener(
-        "DOMContentLoaded",
-        () => {
-
-          document.getElementById(
-            "heroTitle"
-          ).innerHTML =
-            categoryMap[category].title;
-
-          document.getElementById(
-            "heroText"
-          ).innerHTML =
-            categoryMap[category].desc;
-
-        }
-      );
-
-    }
+    const db =
+      getFirestore(app);
 
 
-
-    // =========================================
+    // ======================================
     // LOAD POSTS
-    // =========================================
+    // ======================================
 
-    async function loadPosts() {
+    async function loadPosts(){
 
       const container =
         document.getElementById("posts");
@@ -150,7 +122,7 @@
       const loading =
         document.getElementById("loading");
 
-      try {
+      try{
 
         const q = query(
           collection(db, "blogPosts"),
@@ -163,7 +135,8 @@
         loading.style.display =
           "none";
 
-        if (snapshot.empty) {
+
+        if(snapshot.empty){
 
           container.innerHTML = `
 
@@ -188,6 +161,7 @@
 
         let featuredDone = false;
 
+
         snapshot.forEach((docSnap) => {
 
           const post =
@@ -203,31 +177,17 @@
             ? created.toLocaleDateString(
                 "en-US",
                 {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric"
+                  year:"numeric",
+                  month:"long",
+                  day:"numeric"
                 }
               )
             : "Audiory";
 
 
-          // =====================================
-          // FILTER CATEGORY
-          // =====================================
+          // FEATURED POST
 
-          if (
-            category &&
-            post.category !== category
-          ) {
-            return;
-          }
-
-
-          // =====================================
-          // FEATURED
-          // =====================================
-
-          if (!featuredDone) {
+          if(!featuredDone){
 
             featuredDone = true;
 
@@ -239,7 +199,7 @@
             featured.innerHTML = `
 
               <a
-                href="post.html?slug=${post.slug}"
+                href="/post.html?slug=${post.slug}"
                 class="featuredCard"
               >
 
@@ -256,15 +216,11 @@
 
                 <div class="featuredContent">
 
-                  <div class="featuredTop">
+                  <span class="featuredBadge">
 
-                    <span class="featuredBadge">
+                    ${post.category || 'Featured'}
 
-                      ${post.category || 'Featured'}
-
-                    </span>
-
-                  </div>
+                  </span>
 
                   <h2>
 
@@ -309,19 +265,17 @@
           }
 
 
-
-          // =====================================
           // NORMAL POSTS
-          // =====================================
 
           const card =
             document.createElement("a");
 
           card.href =
-            `post.html?slug=${post.slug}`;
+            `/post.html?slug=${post.slug}`;
 
           card.className =
             "card";
+
 
           card.innerHTML = `
 
@@ -342,6 +296,7 @@
 
             </div>
 
+
             <div class="cardContent">
 
               <div class="cardMeta">
@@ -358,17 +313,20 @@
 
               </div>
 
+
               <h3>
 
                 ${post.title}
 
               </h3>
 
+
               <p>
 
                 ${post.excerpt || ''}
 
               </p>
+
 
               <div class="readMore">
 
@@ -384,7 +342,9 @@
 
         });
 
-      } catch (error) {
+      }
+
+      catch(error){
 
         console.error(error);
 
@@ -401,17 +361,12 @@
 
 
 
-
   <style>
 
     *{
       margin:0;
       padding:0;
       box-sizing:border-box;
-    }
-
-    html{
-      scroll-behavior:smooth;
     }
 
     body{
@@ -434,17 +389,15 @@
 
     }
 
-
     a{
       text-decoration:none;
       color:inherit;
     }
 
 
-
-    /* ====================================
+    /* =========================
        NAVBAR
-    ==================================== */
+    ========================== */
 
     .navbar{
 
@@ -454,7 +407,7 @@
 
       z-index:999;
 
-      backdrop-filter:blur(18px);
+      backdrop-filter:blur(16px);
 
       background:
       rgba(5,8,22,.7);
@@ -482,7 +435,7 @@
 
     .logo{
 
-      font-size:28px;
+      font-size:30px;
 
       font-weight:900;
 
@@ -500,7 +453,7 @@
 
       align-items:center;
 
-      gap:30px;
+      gap:28px;
 
     }
 
@@ -508,9 +461,9 @@
 
       color:#94a3b8;
 
-      font-size:15px;
-
       transition:.2s;
+
+      font-size:15px;
 
     }
 
@@ -518,65 +471,33 @@
       color:white;
     }
 
-    .mainSiteBtn{
-
-      padding:12px 18px;
-
-      border-radius:14px;
+    .mainBtn{
 
       background:#8b5cf6;
 
       color:white !important;
 
-      font-weight:600;
+      padding:12px 18px;
+
+      border-radius:14px;
+
+      font-weight:700;
 
     }
 
-    .mainSiteBtn:hover{
 
-      transform:translateY(-2px);
-
-    }
-
-
-
-    /* ====================================
+    /* =========================
        HERO
-    ==================================== */
+    ========================== */
 
     .hero{
 
       padding:
       120px 24px 80px;
 
-      position:relative;
-
-    }
-
-    .hero::before{
-
-      content:"";
-
-      position:absolute;
-
-      inset:0;
-
-      background:
-      linear-gradient(
-        to bottom,
-        rgba(139,92,246,.18),
-        transparent
-      );
-
-      pointer-events:none;
-
     }
 
     .heroInner{
-
-      position:relative;
-
-      z-index:2;
 
       max-width:1200px;
 
@@ -588,10 +509,6 @@
 
       display:inline-flex;
 
-      align-items:center;
-
-      gap:10px;
-
       padding:12px 18px;
 
       border-radius:999px;
@@ -600,7 +517,7 @@
       rgba(255,255,255,.05);
 
       border:
-      1px solid rgba(255,255,255,.08);
+      1px solid rgba(255,255,255,.06);
 
       color:#d1d5db;
 
@@ -612,7 +529,7 @@
 
     .hero h1{
 
-      font-size:82px;
+      font-size:78px;
 
       line-height:.95;
 
@@ -626,9 +543,9 @@
 
     .hero p{
 
-      max-width:720px;
-
       color:#94a3b8;
+
+      max-width:700px;
 
       line-height:1.9;
 
@@ -637,10 +554,9 @@
     }
 
 
-
-    /* ====================================
-       FEATURED
-    ==================================== */
+    /* =========================
+       SECTION
+    ========================== */
 
     .section{
 
@@ -651,6 +567,11 @@
       padding:0 24px;
 
     }
+
+
+    /* =========================
+       FEATURED
+    ========================== */
 
     .featuredSection{
 
@@ -675,19 +596,19 @@
       border:
       1px solid rgba(255,255,255,.08);
 
-      transition:.3s;
+      min-height:520px;
 
-      min-height:540px;
+      transition:.3s;
 
     }
 
     .featuredCard:hover{
 
       transform:
-      translateY(-6px);
+      translateY(-5px);
 
       border-color:
-      rgba(139,92,246,.4);
+      rgba(139,92,246,.35);
 
     }
 
@@ -713,7 +634,7 @@
     .featuredCard:hover
     .featuredImage{
 
-      transform:scale(1.05);
+      transform:scale(1.04);
 
     }
 
@@ -759,11 +680,11 @@
 
       color:#c4b5fd;
 
+      margin-bottom:24px;
+
       font-size:14px;
 
       font-weight:700;
-
-      margin-bottom:24px;
 
       text-transform:capitalize;
 
@@ -771,13 +692,13 @@
 
     .featuredContent h2{
 
-      font-size:56px;
+      font-size:54px;
 
       line-height:1;
 
       letter-spacing:-2px;
 
-      margin-bottom:22px;
+      margin-bottom:20px;
 
     }
 
@@ -789,7 +710,7 @@
 
       font-size:17px;
 
-      margin-bottom:32px;
+      margin-bottom:30px;
 
     }
 
@@ -809,6 +730,17 @@
 
     }
 
+    .dot{
+
+      width:5px;
+      height:5px;
+
+      border-radius:999px;
+
+      background:#64748b;
+
+    }
+
     .featuredButton{
 
       color:#c4b5fd;
@@ -818,10 +750,9 @@
     }
 
 
-
-    /* ====================================
+    /* =========================
        POSTS
-    ==================================== */
+    ========================== */
 
     .postsHeader{
 
@@ -831,17 +762,19 @@
 
     .postsHeader h2{
 
-      font-size:38px;
+      font-size:42px;
 
-      letter-spacing:-1px;
+      letter-spacing:-2px;
 
-      margin-bottom:8px;
+      margin-bottom:10px;
 
     }
 
     .postsHeader p{
 
       color:#94a3b8;
+
+      font-size:16px;
 
     }
 
@@ -852,10 +785,10 @@
       grid-template-columns:
       repeat(
         auto-fit,
-        minmax(340px,1fr)
+        minmax(280px,1fr)
       );
 
-      gap:30px;
+      gap:22px;
 
       margin-bottom:100px;
 
@@ -864,26 +797,32 @@
     .card{
 
       background:
-      rgba(15,23,42,.78);
+      rgba(15,23,42,.72);
 
       border:
-      1px solid rgba(255,255,255,.06);
+      1px solid rgba(255,255,255,.05);
 
-      border-radius:28px;
+      border-radius:22px;
 
       overflow:hidden;
 
-      transition:.25s;
+      transition:.22s;
+
+      display:flex;
+
+      flex-direction:column;
+
+      min-height:420px;
 
     }
 
     .card:hover{
 
       transform:
-      translateY(-6px);
+      translateY(-5px);
 
       border-color:
-      rgba(139,92,246,.35);
+      rgba(139,92,246,.28);
 
     }
 
@@ -891,7 +830,7 @@
 
       position:relative;
 
-      height:240px;
+      height:180px;
 
       overflow:hidden;
 
@@ -906,13 +845,13 @@
 
       object-fit:cover;
 
-      transition:.4s;
+      transition:.35s;
 
     }
 
     .card:hover .thumb{
 
-      transform:scale(1.06);
+      transform:scale(1.04);
 
     }
 
@@ -925,7 +864,7 @@
       background:
       linear-gradient(
         to top,
-        rgba(0,0,0,.55),
+        rgba(0,0,0,.45),
         transparent
       );
 
@@ -935,10 +874,10 @@
 
       position:absolute;
 
-      top:18px;
-      left:18px;
+      top:14px;
+      left:14px;
 
-      padding:10px 14px;
+      padding:8px 12px;
 
       border-radius:999px;
 
@@ -947,7 +886,7 @@
 
       backdrop-filter:blur(8px);
 
-      font-size:13px;
+      font-size:12px;
 
       font-weight:700;
 
@@ -957,7 +896,13 @@
 
     .cardContent{
 
-      padding:28px;
+      padding:22px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      flex:1;
 
     }
 
@@ -971,32 +916,23 @@
 
       color:#94a3b8;
 
-      font-size:13px;
+      font-size:12px;
 
-      margin-bottom:18px;
-
-    }
-
-    .dot{
-
-      width:5px;
-      height:5px;
-
-      border-radius:999px;
-
-      background:#64748b;
+      margin-bottom:16px;
 
     }
 
     .cardContent h3{
 
-      font-size:30px;
+      font-size:24px;
 
-      line-height:1.15;
+      line-height:1.25;
 
       letter-spacing:-1px;
 
-      margin-bottom:18px;
+      margin-bottom:14px;
+
+      font-weight:800;
 
     }
 
@@ -1004,9 +940,13 @@
 
       color:#94a3b8;
 
-      line-height:1.8;
+      line-height:1.7;
 
-      margin-bottom:30px;
+      font-size:15px;
+
+      margin-bottom:22px;
+
+      flex:1;
 
     }
 
@@ -1016,41 +956,14 @@
 
       font-weight:700;
 
-      font-size:15px;
+      font-size:14px;
 
     }
 
 
-
-    /* ====================================
-       LOADING
-    ==================================== */
-
-    .loading{
-
-      padding:70px 20px;
-
-      text-align:center;
-
-      color:#94a3b8;
-
-    }
-
-    .emptyState{
-
-      padding:100px 20px;
-
-      text-align:center;
-
-      grid-column:1/-1;
-
-    }
-
-
-
-    /* ====================================
+    /* =========================
        FOOTER
-    ==================================== */
+    ========================== */
 
     footer{
 
@@ -1082,7 +995,7 @@
 
     .footerBrand{
 
-      max-width:480px;
+      max-width:450px;
 
     }
 
@@ -1106,7 +1019,7 @@
 
       display:flex;
 
-      gap:90px;
+      gap:80px;
 
       flex-wrap:wrap;
 
@@ -1122,22 +1035,10 @@
 
     }
 
-    .footerColumn h4{
-
-      margin-bottom:6px;
-
-    }
-
     .footerColumn a{
 
       color:#94a3b8;
 
-      transition:.2s;
-
-    }
-
-    .footerColumn a:hover{
-      color:white;
     }
 
     .copyright{
@@ -1153,10 +1054,9 @@
     }
 
 
-
-    /* ====================================
+    /* =========================
        MOBILE
-    ==================================== */
+    ========================== */
 
     @media(max-width:980px){
 
@@ -1180,19 +1080,16 @@
 
       .hero h1{
 
-        font-size:56px;
+        font-size:54px;
 
       }
 
     }
 
-
     @media(max-width:700px){
 
       .navLinks{
-
         display:none;
-
       }
 
       .hero{
@@ -1203,7 +1100,7 @@
 
       .hero h1{
 
-        font-size:44px;
+        font-size:42px;
 
       }
 
@@ -1221,7 +1118,7 @@
 
       .cardContent h3{
 
-        font-size:24px;
+        font-size:22px;
 
       }
 
@@ -1231,7 +1128,6 @@
 
 </head>
 <body>
-
 
 
   <!-- NAVBAR -->
@@ -1249,25 +1145,25 @@
 
       <div class="navLinks">
 
-        <a href="index.html">
+        <a href="/">
           Home
         </a>
 
-        <a href="?category=producer-tips">
+        <a href="/producer-tips/">
           Producer Tips
         </a>
 
-        <a href="?category=marketing">
+        <a href="/marketing/">
           Marketing
         </a>
 
-        <a href="?category=industry">
+        <a href="/industry/">
           Industry
         </a>
 
         <a
           href="https://audiory.site"
-          class="mainSiteBtn"
+          class="mainBtn"
         >
           Main Website
         </a>
@@ -1277,8 +1173,6 @@
     </div>
 
   </nav>
-
-
 
 
 
@@ -1294,14 +1188,14 @@
 
       </div>
 
-      <h1 id="heroTitle">
+      <h1>
 
         Insights for modern
         producers & creators.
 
       </h1>
 
-      <p id="heroText">
+      <p>
 
         Learn producer branding,
         beat selling, music marketing,
@@ -1313,8 +1207,6 @@
     </div>
 
   </section>
-
-
 
 
 
@@ -1335,8 +1227,6 @@
     </div>
 
   </section>
-
-
 
 
 
@@ -1375,8 +1265,6 @@
 
 
 
-
-
   <!-- FOOTER -->
 
   <footer>
@@ -1393,17 +1281,37 @@
 
           Audiory powers the next
           generation of producers,
-          artists and music creators
-          through tools, commerce and
-          creator infrastructure.
+          artists and creators
+          through creator tools,
+          beat commerce and music
+          infrastructure.
 
         </p>
 
       </div>
 
 
-
       <div class="footerLinks">
+
+        <div class="footerColumn">
+
+          <h4>
+            Categories
+          </h4>
+
+          <a href="/producer-tips/">
+            Producer Tips
+          </a>
+
+          <a href="/marketing/">
+            Marketing
+          </a>
+
+          <a href="/industry/">
+            Industry
+          </a>
+
+        </div>
 
 
         <div class="footerColumn">
@@ -1420,34 +1328,7 @@
             Marketplace
           </a>
 
-          <a href="https://audiory.site/producers/">
-            Producers
-          </a>
-
         </div>
-
-
-
-        <div class="footerColumn">
-
-          <h4>
-            Categories
-          </h4>
-
-          <a href="?category=producer-tips">
-            Producer Tips
-          </a>
-
-          <a href="?category=marketing">
-            Marketing
-          </a>
-
-          <a href="?category=industry">
-            Industry
-          </a>
-
-        </div>
-
 
       </div>
 
